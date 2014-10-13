@@ -9,7 +9,7 @@ A PCD (Point-Cloud Library format) viewer.
 
 Building
 ========
-Run `make` from the top level directory
+Set the EIGEN\_PATH variable in the top-level Makefile properly, then run `make` from the top-level directory.
 
 Running a demo
 ==============
