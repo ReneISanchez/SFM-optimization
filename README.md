@@ -1,3 +1,5 @@
+A command line app for Structure-from-Motion 3d estimation using OpenCV and Eigen. HEAVILY based off of https://github.com/royshil/SfM-Toy-Library/tree/master/SfMToyLib.
+
 Requirements
 ============
 make and associated build tools, 
