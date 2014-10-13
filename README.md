@@ -1,12 +1,11 @@
-
 Requirements
 ============
-make and associated build tools
-g++ or clang
-OpenCV
-Eigen3
-pkg-config
-A PCD (Point-Cloud Library format) viewer 
+make and associated build tools, 
+g++ or clang, 
+OpenCV, 
+Eigen3, 
+pkg-config, 
+A PCD (Point-Cloud Library format) viewer.
 
 Building
 ========
