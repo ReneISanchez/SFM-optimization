@@ -29,6 +29,7 @@
 #include "IFeatureMatcher.h"
 #include <opencv2/opencv_modules.hpp>
 
+#undef HAVE_OPENCV_GPU
 #ifdef HAVE_OPENCV_GPU
 #include <opencv2/gpu/gpu.hpp>
 #include <opencv2/nonfree/gpu.hpp>

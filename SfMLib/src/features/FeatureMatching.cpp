@@ -15,7 +15,7 @@
 #include <opencv2/video/tracking.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
-#include <opencv2/nonfree/features2d.hpp>
+//#include <opencv2/nonfree/features2d.hpp>
 
 #include <iostream>
 #include <set>
@@ -74,7 +74,7 @@ void MatchFeatures(const Mat& img_1, const Mat& img_1_orig,
 		int minHessian = 10;
 		
 		//		GridAdaptedFeatureDetector detector(new SurfFeatureDetector(minHessian), 1000,1,1);
-		SurfFeatureDetector detector( minHessian );
+		OrbFeatureDetector detector( minHessian );
 		
 		if(update_imgpts1) {
 			detector.detect( img_1, keypoints_1 );
@@ -90,8 +90,8 @@ void MatchFeatures(const Mat& img_1, const Mat& img_1_orig,
 
 		
 		//-- Step 2: Calculate descriptors (feature vectors)
-		//		SurfDescriptorExtractor extractor(8,4,true);
-		SiftDescriptorExtractor extractor(48,16,true);
+		OrbDescriptorExtractor extractor(8,4,true);
+		//SiftDescriptorExtractor extractor(48,16,true);
 		//	OpponentColorDescriptorExtractor extractor(new SurfDescriptorExtractor);
 		
 		if(descriptors_1.empty()) {

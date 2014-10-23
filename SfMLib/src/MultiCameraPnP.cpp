@@ -30,14 +30,15 @@
 
 #include "RichFeatureMatcher.h"
 #include "OFFeatureMatcher.h"
-#include "GPUSURFFeatureMatcher.h"
 
 #include "MultiCameraPnP.h"
 #include "BundleAdjuster.h"
 
 using namespace std;
 
-#ifdef HAVE_OPENCV_GPU
+#undef HAVE_OPENCV_GPU
+#if HAVE_OPENCV_GPU
+#include "GPUSURFFeatureMatcher.h"
 #include <opencv2/gpu/gpu.hpp>
 #endif
 #include <opencv2/calib3d/calib3d.hpp>
@@ -237,7 +238,7 @@ bool MultiCameraPnP::FindPoseEstimation(
 	cv::projectPoints(ppcloud, rvec, t, K, distortion_coeff, projected3D);
 	
 	if(inliers.size()==0) { //get inliers
-		for(int i=0;i<projected3D.size();i++) {
+		for(unsigned int i=0;i<projected3D.size();i++) {
 			if(norm(projected3D[i]-imgPoints[i]) < 10.0)
 				inliers.push_back(i);
 		}
@@ -300,14 +301,14 @@ bool MultiCameraPnP::TriangulatePointsBetweenViews(
 	
 	//filter out outlier points with high reprojection
 	vector<double> reprj_errors;
-	for(int i=0;i<new_triangulated.size();i++) { reprj_errors.push_back(new_triangulated[i].reprojection_error); }
+	for(unsigned int i=0;i<new_triangulated.size();i++) { reprj_errors.push_back(new_triangulated[i].reprojection_error); }
 	std::sort(reprj_errors.begin(),reprj_errors.end());
 	//get the 80% precentile
 	double reprj_err_cutoff = reprj_errors[4 * reprj_errors.size() / 5] * 2.4; //threshold from Snavely07 4.2
 	
 	vector<CloudPoint> new_triangulated_filtered;
 	std::vector<cv::DMatch> new_matches;
-	for(int i=0;i<new_triangulated.size();i++) {
+	for(unsigned int i=0;i<new_triangulated.size();i++) {
 		if(trig_status[i] == 0)
 			continue; //point was not in front of camera
 		if(new_triangulated[i].reprojection_error > 16.0) {
@@ -658,10 +659,18 @@ void MultiCameraPnP::OnlyMatchFeatures()
 	
 	if (use_rich_features)
 	{
+#ifndef HAVE_OPENCV_GPU
+		use_gpu = false;
+#endif
 		if (use_gpu)
 		{
+#ifndef HAVE_OPENCV_GPU
+			std::cout << "GPU lib not linked. Using CPU\n";
+			feature_matcher = new RichFeatureMatcher(imgs,imgpts);
+#else
 			std::cout << "Using GPU\n";
 			feature_matcher = new GPUSURFFeatureMatcher(imgs,imgpts);
+#endif
 		}
 		else
 		{

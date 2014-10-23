@@ -28,6 +28,7 @@
  */
 
 #include "GPUSURFFeatureMatcher.h"
+#undef HAVE_OPENCV_GPU
 
 #ifdef HAVE_OPENCV_GPU
 
