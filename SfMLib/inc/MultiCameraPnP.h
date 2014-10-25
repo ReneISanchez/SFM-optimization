@@ -173,8 +173,8 @@ private:
 		std::vector<cv::Point2f> imgPoints);
 	
 	bool TriangulatePointsBetweenViews(
-		int working_view, 
-		int second_view,
+		unsigned int working_view, 
+		unsigned int second_view,
 		std::vector<struct CloudPoint>& new_triangulated,
 		std::vector<int>& add_to_cloud
 		);
@@ -198,7 +198,7 @@ public:
 private:
     void update()
     {
-        for (int i = 0; i < listeners.size(); i++)
+        for (unsigned int i = 0; i < listeners.size(); i++)
 		{
 			listeners[i]->update(getPointCloud(),
 								 getPointCloudRGB(),

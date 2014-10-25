@@ -13,7 +13,7 @@ OBJ=$(SOURCES:.cpp=.o)
 CFLAGS=-I./$(INC) -I./$(INC)/$(FEAT) -I$(EIGEN_PATH) `pkg-config --cflags opencv` -Wall -O2
 LDFLAGS=-L. -L./$(LIB_PATH) -lsfm `pkg-config --libs opencv`
 
-ifeq (`uname`,Linux)
+ifeq ($(shell uname -s),Linux)
 LDFLAGS+= -Wl,-rpath=./
 endif
 

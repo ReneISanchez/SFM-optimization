@@ -266,8 +266,8 @@ bool MultiCameraPnP::FindPoseEstimation(
 }
 
 bool MultiCameraPnP::TriangulatePointsBetweenViews(
-												   int working_view,
-												   int older_view,
+												   unsigned int working_view,
+												   unsigned int older_view,
 												   vector<struct CloudPoint>& new_triangulated,
 												   vector<int>& add_to_cloud
 												   )
@@ -346,11 +346,11 @@ bool MultiCameraPnP::TriangulatePointsBetweenViews(
 	add_to_cloud.clear();
 	add_to_cloud.resize(new_triangulated.size(),1);
 	int found_other_views_count = 0;
-	int num_views = imgs.size();
+	unsigned int num_views = imgs.size();
 	
 	//scan new triangulated points, if they were already triangulated before - strengthen cloud
 	//#pragma omp parallel for num_threads(1)
-	for (int j = 0; j<new_triangulated.size(); j++) {
+	for (unsigned int j = 0; j<new_triangulated.size(); j++) {
 		new_triangulated[j].imgpt_for_img.resize(imgs.size(),-1);
 		
 		//matches[j] corresponds to new_triangulated[j]
@@ -423,7 +423,7 @@ void MultiCameraPnP::AdjustCurrentBundle() {
 void MultiCameraPnP::PruneMatchesBasedOnF() {
 	//prune the match between <_i> and all views using the Fundamental matrix to prune
 	//#pragma omp parallel for
-	for (int _i=0; _i < imgs.size() - 1; _i++)
+	for (unsigned int _i=0; _i < imgs.size() - 1; _i++)
 	{
 		for (unsigned int _j=_i+1; _j < imgs.size(); _j++)
 		{
@@ -549,7 +549,7 @@ void MultiCameraPnP::RecoverDepthFromImages()
 			
 			std::cout << "before triangulation: " << pcloud.size();
 			
-			for (int j = 0; j < add_to_cloud.size(); j++)
+			for (unsigned int j = 0; j < add_to_cloud.size(); j++)
 			{
 				if(add_to_cloud[j] == 1)
 				{
@@ -737,7 +737,7 @@ void MultiCameraPnP::GetRGBForPointCloud(
 		{
 			if(_pcloud[i].imgpt_for_img[good_view] != -1)
 			{
-				int pt_idx = _pcloud[i].imgpt_for_img[good_view];
+				unsigned int pt_idx = _pcloud[i].imgpt_for_img[good_view];
 				
 				if(pt_idx >= imgpts[good_view].size())
 				{

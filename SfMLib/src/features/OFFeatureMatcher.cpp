@@ -51,7 +51,9 @@ OFFeatureMatcher::OFFeatureMatcher(
 	bool _use_gpu,
 	std::vector<cv::Mat>& imgs_, 
 	std::vector<std::vector<cv::KeyPoint> >& imgpts_) :
-AbstractFeatureMatcher(_use_gpu),imgpts(imgpts_), imgs(imgs_)
+AbstractFeatureMatcher(_use_gpu),
+imgs(imgs_),
+imgpts(imgpts_)
 {
 	//detect keypoints for all images
 	FastFeatureDetector ffd;
@@ -126,7 +128,8 @@ void OFFeatureMatcher::MatchFeatures(int idx_i, int idx_j, vector<DMatch>* match
 	BFMatcher matcher(CV_L2);
 	CV_PROFILE("RadiusMatch",matcher.radiusMatch(to_find_flat,j_pts_flat,knn_matches,2.0f);)
 	CV_PROFILE("Prune",
-	for(int i=0;i<knn_matches.size();i++) {
+	for(unsigned int i = 0; i < knn_matches.size(); i++) 
+	{
 		DMatch _m;
 		if(knn_matches[i].size()==1) {
 			_m = knn_matches[i][0];
@@ -153,7 +156,8 @@ void OFFeatureMatcher::MatchFeatures(int idx_i, int idx_j, vector<DMatch>* match
 		// draw flow field
 		Mat img_matches; cvtColor(imgs[idx_i],img_matches,CV_GRAY2BGR);
 		i_pts.clear(); j_pts.clear();
-		for(int i=0;i<matches->size();i++) {
+		for(unsigned int i = 0; i < matches->size(); i++) 
+		{
 			//if (i%2 != 0) {
 //				continue;
 //			}

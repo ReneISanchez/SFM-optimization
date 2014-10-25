@@ -93,7 +93,8 @@ Mat_<double> IterativeLinearLSTriangulation(Point3d u,	//homogenous image point 
 	Mat_<double> X(4,1);
 	Mat_<double> X_ = LinearLSTriangulation(u,P,u1,P1);
 	X(0) = X_(0); X(1) = X_(1); X(2) = X_(2); X(3) = 1.0;
-	for (int i=0; i<10; i++) { //Hartley suggests 10 iterations at most
+	for (int i = 0; i < 10; i++) 
+	{ //Hartley suggests 10 iterations at most
 		//recalculate weights
 		double p2x = Mat_<double>(Mat_<double>(P).row(2)*X)(0);
 		double p2x1 = Mat_<double>(Mat_<double>(P1).row(2)*X)(0);
@@ -178,7 +179,8 @@ double TriangulatePoints(const vector<KeyPoint>& pt_set1,
 	vector<Point2f> reprojected_pt_set1;
 	projectPoints(pt_3d,rvec,tvec,K,distcoeff,reprojected_pt_set1);
 
-	for (unsigned int i=0; i<pts_size; i++) {
+	for (unsigned int i = 0; i < pts_size; i++) 
+	{
 		CloudPoint cp; 
 		cp.pt = pt_3d[i];
 		pointcloud.push_back(cp);
@@ -187,7 +189,8 @@ double TriangulatePoints(const vector<KeyPoint>& pt_set1,
 #else
 	Mat_<double> KP1 = K * Mat(P1);
 #pragma omp parallel for num_threads(1)
-	for (int i=0; i<pts_size; i++) {
+	for (unsigned int i = 0; i < pts_size; i++) 
+	{
 		Point2f kp = pt_set1[i].pt; 
 		Point3d u(kp.x,kp.y,1.0);
 		Mat_<double> um = Kinv * Mat_<double>(u); 

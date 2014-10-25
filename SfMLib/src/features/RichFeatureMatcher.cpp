@@ -46,7 +46,7 @@ using namespace cv;
 //c'tor
 RichFeatureMatcher::RichFeatureMatcher(std::vector<cv::Mat>& imgs_, 
 									   std::vector<std::vector<cv::KeyPoint> >& imgpts_) :
-	imgpts(imgpts_), imgs(imgs_)
+	imgs(imgs_), imgpts(imgpts_)
 {
 	detector = FeatureDetector::create("PyramidFAST");
 	extractor = DescriptorExtractor::create("ORB");
@@ -98,7 +98,7 @@ void RichFeatureMatcher::MatchFeatures(int idx_i, int idx_j, vector<DMatch>* mat
 		vector<vector<DMatch> > nn_matches;
 		matcher.knnMatch(descriptors_1,descriptors_2,nn_matches,1);
 		matches->clear();
-		for (int i = 0; i < nn_matches.size(); i++)
+		for (unsigned int i = 0; i < nn_matches.size(); i++)
 		{
 			if (nn_matches[i].size()>0)
 			{

@@ -279,12 +279,13 @@ bool TestTriangulation(const vector<CloudPoint>& pcloud, const Matx34d& P, vecto
 	vector<Point3d> pcloud_pt3d_projected(pcloud_pt3d.size());
 	
 	Matx44d P4x4 = Matx44d::eye(); 
-	for(int i=0;i<12;i++) P4x4.val[i] = P.val[i];
+	for(int i = 0; i < 12; i++) P4x4.val[i] = P.val[i];
 	
 	perspectiveTransform(pcloud_pt3d, pcloud_pt3d_projected, P4x4);
 	
 	status.resize(pcloud.size(),0);
-	for (int i=0; i<pcloud.size(); i++) {
+	for (unsigned int i = 0; i < pcloud.size(); i++) 
+	{
 		status[i] = (pcloud_pt3d_projected[i].z > 0) ? 1 : 0;
 	}
 	int count = countNonZero(status);
@@ -298,7 +299,8 @@ bool TestTriangulation(const vector<CloudPoint>& pcloud, const Matx34d& P, vecto
 	if(false) //not
 	{
 		cv::Mat_<double> cldm(pcloud.size(),3);
-		for(unsigned int i=0;i<pcloud.size();i++) {
+		for(unsigned int i = 0; i < pcloud.size(); i++) 
+		{
 			cldm.row(i)(0) = pcloud[i].pt.x;
 			cldm.row(i)(1) = pcloud[i].pt.y;
 			cldm.row(i)(2) = pcloud[i].pt.z;
@@ -311,7 +313,8 @@ bool TestTriangulation(const vector<CloudPoint>& pcloud, const Matx34d& P, vecto
 		cv::Vec3d x0 = pca.mean;
 		double p_to_plane_thresh = sqrt(pca.eigenvalues.at<double>(2));
 
-		for (int i=0; i<pcloud.size(); i++) {
+		for (unsigned int i = 0; i < pcloud.size(); i++) 
+		{
 			Vec3d w = Vec3d(pcloud[i].pt) - x0;
 			double D = fabs(nrm.dot(w));
 			if(D < p_to_plane_thresh) num_inliers++;
@@ -478,7 +481,9 @@ bool FindCameraMatrices(const Mat& K,
 					}				
 				}			
 			}
-			for (unsigned int i=0; i<pcloud.size(); i++) {
+			
+			for (unsigned int i = 0; i < pcloud.size(); i++) 
+			{
 				outCloud.push_back(pcloud[i]);
 			}
 		}		

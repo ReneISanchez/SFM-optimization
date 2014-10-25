@@ -90,9 +90,9 @@ namespace
 int BundleAdjuster::Count2DMeasurements(const vector<CloudPoint>& pointcloud) 
 {
 	int K = 0;
-	for (unsigned int i=0; i<pointcloud.size(); i++) 
+	for (unsigned int i = 0; i < pointcloud.size(); i++) 
     {
-		for (unsigned int ii=0; ii<pointcloud[i].imgpt_for_img.size(); ii++) 
+		for (unsigned int ii = 0; ii < pointcloud[i].imgpt_for_img.size(); ii++) 
         {
 			if (pointcloud[i].imgpt_for_img[ii] >= 0) 
             {
@@ -190,7 +190,7 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 	//convert 2D measurements to BA datastructs
 	for (unsigned int k = 0; k < pointcloud.size(); ++k)
 	{
-		for (unsigned int i=0; i<pointcloud[k].imgpt_for_img.size(); i++) {
+		for (unsigned int i = 0; i < pointcloud[k].imgpt_for_img.size(); i++) {
 			if (pointcloud[k].imgpt_for_img[i] >= 0) {
 				int view = i, point = k;
 				Vector3d p, np;
@@ -318,7 +318,7 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 	vector<int> local_cam_id_to_global_id(N,-1);
 	int local_cam_count = 0;
 	
-	for (int pt3d = 0; pt3d < pointcloud.size(); pt3d++) 
+	for (unsigned int pt3d = 0; pt3d < pointcloud.size(); pt3d++) 
     {
 		points[pt3d] = pointcloud[pt3d].pt;
 		
@@ -392,7 +392,7 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 	cout << "DONE\n";
 	
 	//get the BAed points
-	for (int pt3d = 0; pt3d < pointcloud.size(); pt3d++) 
+	for (unsigned int pt3d = 0; pt3d < pointcloud.size(); pt3d++) 
     {
 		pointcloud[pt3d].pt = points[pt3d];
 	}
