@@ -88,11 +88,13 @@ Mat_<double> IterativeLinearLSTriangulation(Point3d u,	//homogenous image point 
 											Matx34d P,			//camera 1 matrix
 											Point3d u1,			//homogenous image point in 2nd camera
 											Matx34d P1			//camera 2 matrix
-											) {
+											) 
+{
 	double wi = 1, wi1 = 1;
 	Mat_<double> X(4,1);
 	Mat_<double> X_ = LinearLSTriangulation(u,P,u1,P1);
 	X(0) = X_(0); X(1) = X_(1); X(2) = X_(2); X(3) = 1.0;
+	
 	for (int i = 0; i < 10; i++) 
 	{ //Hartley suggests 10 iterations at most
 		//recalculate weights
@@ -100,7 +102,10 @@ Mat_<double> IterativeLinearLSTriangulation(Point3d u,	//homogenous image point 
 		double p2x1 = Mat_<double>(Mat_<double>(P1).row(2)*X)(0);
 		
 		//breaking point
-		if(fabsf(wi - p2x) <= EPSILON && fabsf(wi1 - p2x1) <= EPSILON) break;
+		if (fabsf(wi - p2x) <= EPSILON && fabsf(wi1 - p2x1) <= EPSILON)
+		{
+			break;
+		}
 		
 		wi = p2x;
 		wi1 = p2x1;

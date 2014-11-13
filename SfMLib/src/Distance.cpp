@@ -33,8 +33,6 @@
 #include <fstream>
 
 using namespace std;
-
-
 using namespace cv;
 
 #include "Distance.h"
