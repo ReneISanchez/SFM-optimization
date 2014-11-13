@@ -87,12 +87,15 @@ namespace
 #endif
 
 //count number of 2D measurements
-int BundleAdjuster::Count2DMeasurements(const vector<CloudPoint>& pointcloud) {
+int BundleAdjuster::Count2DMeasurements(const vector<CloudPoint>& pointcloud) 
+{
 	int K = 0;
-	for (unsigned int i = 0; i < pointcloud.size(); i++) {
-		for (unsigned int ii = 0; ii < pointcloud[i].imgpt_for_img.size();
-				ii++) {
-			if (pointcloud[i].imgpt_for_img[ii] >= 0) {
+	for (unsigned int i = 0; i < pointcloud.size(); i++) 
+	{
+		for (unsigned int ii = 0; ii < pointcloud[i].imgpt_for_img.size(); ii++) 
+		{
+			if (pointcloud[i].imgpt_for_img[ii] >= 0) 
+			{
 				K++;
 			}
 		}
@@ -102,9 +105,9 @@ int BundleAdjuster::Count2DMeasurements(const vector<CloudPoint>& pointcloud) {
 
 void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 		Mat& cam_matrix, const vector<vector<cv::KeyPoint> >& imgpts,
-		map<int, cv::Matx34d>& Pmats) {
-	int N = Pmats.size(), M = pointcloud.size(), K = Count2DMeasurements(
-			pointcloud);
+		map<int, cv::Matx34d>& Pmats) 
+{
+	int N = Pmats.size(), M = pointcloud.size(), K = Count2DMeasurements(pointcloud);
 
 	cout << "N (cams) = " << N << " M (points) = " << M
 			<< " K (measurements) = " << K << endl;
@@ -317,12 +320,16 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 	vector<int> local_cam_id_to_global_id(N, -1);
 	int local_cam_count = 0;
 
-	for (unsigned int pt3d = 0; pt3d < pointcloud.size(); pt3d++) {
+	for (unsigned int pt3d = 0; pt3d < pointcloud.size(); pt3d++) 
+	{
 		points[pt3d] = pointcloud[pt3d].pt;
 
-		for (int pt3d_img = 0; pt3d_img < num_global_cams; pt3d_img++) {
-			if (pointcloud[pt3d].imgpt_for_img[pt3d_img] >= 0) {
-				if (global_cam_id_to_local_id[pt3d_img] < 0) {
+		for (int pt3d_img = 0; pt3d_img < num_global_cams; pt3d_img++) 
+		{
+			if (pointcloud[pt3d].imgpt_for_img[pt3d_img] >= 0) 
+			{
+				if (global_cam_id_to_local_id[pt3d_img] < 0) 
+				{
 					local_cam_id_to_global_id[local_cam_count] = pt3d_img;
 					global_cam_id_to_local_id[pt3d_img] = local_cam_count++;
 				}
@@ -340,17 +347,21 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 		}
 
 		//2nd pass to mark not-founds
-		for (int pt3d_img = 0; pt3d_img < num_global_cams; pt3d_img++) {
-			if (pointcloud[pt3d].imgpt_for_img[pt3d_img] < 0) {
+		for (int pt3d_img = 0; pt3d_img < num_global_cams; pt3d_img++) 
+		{
+			if (pointcloud[pt3d].imgpt_for_img[pt3d_img] < 0) 
+			{
 				//see if this global camera is being used locally in the BA
 				vector<int>::iterator local_it = find(
 						local_cam_id_to_global_id.begin(),
 						local_cam_id_to_global_id.end(), pt3d_img);
-				if (local_it != local_cam_id_to_global_id.end()) {
+				if (local_it != local_cam_id_to_global_id.end()) 
+				{
 					//this camera is used, and its local id is:
 					int local_id = local_it - local_cam_id_to_global_id.begin();
 
-					if (local_id >= 0) {
+					if (local_id >= 0) 
+					{
 						//reproject
 						Mat_<double> X =
 								(Mat_<double>(4, 1) << pointcloud[pt3d].pt.x, pointcloud[pt3d].pt.y, pointcloud[pt3d].pt.z, 1);
@@ -368,7 +379,8 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 		}
 	}
 
-	for (int i = 0; i < N; i++) {
+	for (int i = 0; i < N; i++) 
+	{
 		cameraMatrix[i] = cam_matrix;
 
 		Matx34d& P = Pmats[local_cam_id_to_global_id[i]];
@@ -397,12 +409,14 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 	cout << "DONE\n";
 
 	//get the BAed points
-	for (unsigned int pt3d = 0; pt3d < pointcloud.size(); pt3d++) {
+	for (unsigned int pt3d = 0; pt3d < pointcloud.size(); pt3d++) 
+	{
 		pointcloud[pt3d].pt = points[pt3d];
 	}
 
 	//get the BAed cameras
-	for (int i = 0; i < N; ++i) {
+	for (int i = 0; i < N; ++i) 
+	{
 		Matx34d P;
 		P(0, 0) = R[i].at<double>(0, 0);
 		P(0, 1) = R[i].at<double>(0, 1);

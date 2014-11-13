@@ -313,7 +313,9 @@ bool TestTriangulation(const vector<CloudPoint>& pcloud, const Matx34d& P, vecto
 	double percentage = ((double)count / (double)pcloud.size());
 	cout << count << "/" << pcloud.size() << " = " << percentage*100.0 << "% are in front of camera" << endl;
 	if (percentage < 0.75)
+	{
 		return false; //less than 75% of the points are in front of the camera
+	}
 
 	//check for coplanarity of points
 	if (false) //not
@@ -337,7 +339,10 @@ bool TestTriangulation(const vector<CloudPoint>& pcloud, const Matx34d& P, vecto
 		{
 			Vec3d w = Vec3d(pcloud[i].pt) - x0;
 			double D = fabs(nrm.dot(w));
-			if (D < p_to_plane_thresh) num_inliers++;
+			if (D < p_to_plane_thresh)
+			{
+				num_inliers++;
+			}
 		}
 
 		cout << num_inliers << "/" << pcloud.size() << " are coplanar" << endl;
@@ -360,23 +365,27 @@ bool DecomposeEtoRandT(
 #ifdef DECOMPOSE_SVD
 	//Using HZ E decomposition
 	Mat svd_u, svd_vt, svd_w;
-	TakeSVDOfE(E,svd_u,svd_vt,svd_w);
+	TakeSVDOfE(E, svd_u, svd_vt, svd_w);
 
 	//check if first and second singular values are the same (as they should be)
 	double singular_values_ratio = fabsf(svd_w.at<double>(0) / svd_w.at<double>(1));
-	if (singular_values_ratio>1.0) singular_values_ratio = 1.0/singular_values_ratio; // flip ratio to keep it [0,1]
+	if (singular_values_ratio > 1.0)
+	{
+		singular_values_ratio = 1.0/singular_values_ratio; // flip ratio to keep it [0,1]
+	}
+	
 	if (singular_values_ratio < 0.7) 
 	{
 		cout << "singular values are too far apart\n";
 		return false;
 	}
 
-	Matx33d W(0,-1,0,	//HZ 9.13
-		1,0,0,
-		0,0,1);
-	Matx33d Wt(0,1,0,
-		-1,0,0,
-		0,0,1);
+	Matx33d W(	0,-1,0,	//HZ 9.13
+				1,0,0,
+				0,0,1);
+	Matx33d Wt(	0,1,0,
+				-1,0,0,
+				0,0,1);
 	R1 = svd_u * Mat(W) * svd_vt; //HZ 9.19
 	R2 = svd_u * Mat(Wt) * svd_vt; //HZ 9.19
 	t1 = svd_u.col(2); //u3
