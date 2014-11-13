@@ -130,7 +130,7 @@ void MultiCameraPnP::GetBaseLineTriangulation()
 #endif
 								   );
 		if (goodF) 
-        {
+		{
 			vector<CloudPoint> new_triangulated;
 			vector<int> add_to_cloud;
 			
@@ -336,31 +336,34 @@ bool MultiCameraPnP::TriangulatePointsBetweenViews(
 	vector<CloudPoint> new_triangulated_filtered;
 	vector<cv::DMatch> new_matches;
 for (unsigned int i=0;i<new_triangulated.size();i++) 
+{
+	if (trig_status[i] == 0)
 	{
-		if (trig_status[i] == 0)
-		{
-			continue; //point was not in front of camera
-		}
-		if (new_triangulated[i].reprojection_error > 16.0) 
-		{
-			continue; //reject point
-		}
-		if (new_triangulated[i].reprojection_error < 4.0 ||
-		   new_triangulated[i].reprojection_error < reprj_err_cutoff)
-		{
-			new_triangulated_filtered.push_back(new_triangulated[i]);
-			new_matches.push_back(matches[i]);
-		}
-		else
-		{
-			continue;
-		}
+		continue; //point was not in front of camera
+	}
+	if (new_triangulated[i].reprojection_error > 16.0) 
+	{
+		continue; //reject point
+	}
+	if (new_triangulated[i].reprojection_error < 4.0 ||
+		new_triangulated[i].reprojection_error < reprj_err_cutoff)
+	{
+		new_triangulated_filtered.push_back(new_triangulated[i]);
+		new_matches.push_back(matches[i]);
+	}
+	else
+	{
+		continue;
+	}
 	}
 	
 	cout << "filtered out " << (new_triangulated.size() - new_triangulated_filtered.size()) << " high-error points" << endl;
 	
 	//all points filtered out?
-	if (new_triangulated_filtered.size() <= 0) return false;
+	if (new_triangulated_filtered.size() <= 0)
+	{
+		return false;
+	}
 	
 	//use filtered points now
 	new_triangulated.clear();
@@ -381,7 +384,8 @@ for (unsigned int i=0;i<new_triangulated.size();i++)
 	
 	//scan new triangulated points, if they were already triangulated before - strengthen cloud
 	//#pragma omp parallel for num_threads(1)
-	for (unsigned int j = 0; j<new_triangulated.size(); j++) {
+	for (unsigned int j = 0; j<new_triangulated.size(); j++) 
+	{
 		new_triangulated[j].imgpt_for_img.resize(imgs.size(),-1);
 		
 		//matches[j] corresponds to new_triangulated[j]
@@ -441,7 +445,8 @@ for (unsigned int i=0;i<new_triangulated.size();i++)
 	return true;
 }
 
-void MultiCameraPnP::AdjustCurrentBundle() {
+void MultiCameraPnP::AdjustCurrentBundle() 
+{
 	cout << "======================== Bundle Adjustment ==========================\n";
 	
 	pointcloud_beforeBA = pcloud;
@@ -692,7 +697,10 @@ void MultiCameraPnP::init(const string& imgs_path_)
 
 void MultiCameraPnP::OnlyMatchFeatures()
 {
-	if (features_matched) return;
+	if (features_matched)
+	{
+		return;
+	}
 
 	cout << "Matching features...\n";
 	
