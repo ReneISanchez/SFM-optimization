@@ -40,19 +40,91 @@
 #include <iostream>
 #include <set>
 
+//#include "zmmintrin.h" // Intel intrinsics - popcnt
+#include "mmintrin.h" // Intel intrinsics - (mmx) pxor
+
 using namespace std;
 using namespace cv;
 
+static const unsigned char popCountTable[] =
+{
+	0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+	1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+	1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+	1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+	3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8
+};
+
+static void getDescriptorDist(const cv::Mat& descriptors_1, 
+		const cv::Mat& descriptors_2,
+		std::vector<std::pair<int,int> >& minDist){
+	for (int x = 0; x < descriptors_1.rows; x++)
+	{
+		int min = INT_MAX;
+		int yIdx = 0;
+		for (int y = 0 ; y < descriptors_2.rows ; y++)
+		{
+			int sumHamDist = 0;
+			__m64 mDes1, mDes2;
+			for (int z = 0; z < descriptors_1.cols; z++){
+				mDes1 = _mm_cvtsi32_si64(descriptors_1.at<unsigned char>(x,z));
+				mDes2 = _mm_cvtsi32_si64(descriptors_2.at<unsigned char>(y,z));
+				(_mm_xor_si64(mDes1, mDes2));
+//				sumHamDist += popCountTable[(descriptors_1.at<unsigned char>(x,z)) ^ (descriptors_2.at<unsigned char>(y,z))];
+				sumHamDist += popCountTable[_mm_cvtsi64_si32(_mm_xor_si64(mDes1, mDes2))];
+//				sumHamDist += _mm_countbits_64[(descriptors_1.at<unsigned char>(x,z)) ^ (descriptors_2.at<unsigned char>(y,z))];
+			}
+			if (sumHamDist <= min)
+			{
+				min = sumHamDist;
+				yIdx = y;
+			}
+		}
+		minDist.push_back(std::make_pair(yIdx, min));
+	}
+} //--endGetDescriptorDist
+static void verifyCrossCheck(std::vector<std::pair<int,int> >&minDist1,
+		std::vector<std::pair<int,int> >&minDist2,
+		vector < vector<DMatch> >& nn_matches){
+	for (unsigned int x = 0; x < minDist1.size() && x < minDist2.size(); x++)
+		// size cutoff at smaller vector
+	{
+		std::vector<cv::DMatch> tempVect;
+		unsigned int tempDis1 = minDist2[ minDist1[x].first ].second;  // distances from <-
+		unsigned int tempDis2 = minDist1[ minDist2[x].first ].second; // distances from ->
+		if ( tempDis2 < tempDis1 )
+		{
+			/*
+			   --- minDistance1[x].second is the HamDist from checking all of descriptors_2
+			   against the first of descriptors_1, so we want the indices of the verified distance coming
+			   from descriptors_2.
+			   To locate it you only need which row it's in bc they all start at col 0 --- 
+			 */
+			tempVect.push_back( cv::DMatch (x , minDist1[x].first , (float)tempDis2));
+		}
+		else
+		{
+			//tempVect.push_back(DMatch( minDistance1[x].first, x, (float)tempDis1) ); //orig
+			tempVect.push_back(cv::DMatch( x, minDist1[x].first, (float)tempDis1) );
+		}
+		nn_matches.push_back(tempVect);
+		tempVect.clear();
+	}
+} //endVerifyCrossCheck
+/*---------------------------------------------------------------------------*/
 //c'tor
 RichFeatureMatcher::RichFeatureMatcher(std::vector<cv::Mat>& imgs_,
 		std::vector<std::vector<cv::KeyPoint> >& imgpts_) :
-		imgs(imgs_), imgpts(imgpts_) 
+	imgs(imgs_), imgpts(imgpts_) 
 {
 	detector = FeatureDetector::create("PyramidFAST");
 	extractor = DescriptorExtractor::create("ORB");
 
 	std::cout
-			<< " -------------------- extract feature points for all images -------------------\n";
+		<< " -------------------- extract feature points for all images -------------------\n";
 
 	detector->detect(imgs, imgpts);
 	extractor->compute(imgs, imgpts, descriptors);
@@ -74,9 +146,9 @@ void RichFeatureMatcher::MatchFeatures(int idx_i, int idx_j, vector<DMatch>* mat
 	std::vector<KeyPoint> keypoints_1, keypoints_2;
 
 	cout << "imgpts1 has " << imgpts1.size() << " points (descriptors "
-			<< descriptors_1.rows << ")" << endl;
+		<< descriptors_1.rows << ")" << endl;
 	cout << "imgpts2 has " << imgpts2.size() << " points (descriptors "
-			<< descriptors_2.rows << ")" << endl;
+		<< descriptors_2.rows << ")" << endl;
 
 	keypoints_1 = imgpts1;
 	keypoints_2 = imgpts2;
@@ -101,9 +173,16 @@ void RichFeatureMatcher::MatchFeatures(int idx_i, int idx_j, vector<DMatch>* mat
 	if (matches->size() == 0) 
 	{
 		vector < vector<DMatch> > nn_matches;
-		matcher.knnMatch(descriptors_1, descriptors_2, nn_matches, 1);
+		//matcher.knnMatch(descriptors_1, descriptors_2, nn_matches, 1);
+		/*---------------------------------------------------------------------------*/
+		std::vector<std::pair<int,int> > minDistance1; // holds minDist from first check
+		std::vector<std::pair<int,int> > minDistance2; // holds minDist from cross check
+		getDescriptorDist(descriptors_1, descriptors_2, minDistance1); // returns minDistance1
+		getDescriptorDist(descriptors_2, descriptors_1, minDistance2); // returns minDistance2
+		verifyCrossCheck(minDistance1, minDistance2, nn_matches);
+		/*---------------------------------------------------------------------------*/
 		matches->clear();
-		
+
 		for (unsigned int i = 0; i < nn_matches.size(); i++) 
 		{
 			if (nn_matches[i].size() > 0) 
@@ -162,7 +241,7 @@ void RichFeatureMatcher::MatchFeatures(int idx_i, int idx_j, vector<DMatch>* mat
 	}
 
 	cout << "Keep " << good_matches_.size() << " out of " << matches->size()
-			<< " matches" << endl;
+		<< " matches" << endl;
 
 	*matches = good_matches_;
 

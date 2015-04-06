@@ -10,7 +10,7 @@ EIGEN_PATH=/usr/local/Cellar/eigen/3.2.2/include/eigen3
 SOURCES=$(wildcard *.cpp)
 OBJ=$(SOURCES:.cpp=.o)
 
-CFLAGS=-I./$(INC) -I./$(INC)/$(FEAT) -I$(EIGEN_PATH) `pkg-config --cflags opencv` -Wall -O2
+CFLAGS=-I./$(INC) -I./$(INC)/$(FEAT) -I$(EIGEN_PATH) `pkg-config --cflags opencv` -Wall -O2 -g -pg
 LDFLAGS=-L. -L./$(LIB_PATH) -lsfm `pkg-config --libs opencv`
 
 ifeq ($(shell uname -s),Linux)

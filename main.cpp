@@ -35,6 +35,7 @@
 #include "MultiCameraPnP.h"
 
 using namespace std;
+using namespace cv;
 
 #ifdef HAVE_OPENCV_GPU
 #include <opencv2/gpu/gpu.hpp>
