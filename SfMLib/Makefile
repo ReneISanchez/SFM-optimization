@@ -6,7 +6,7 @@ FEAT=features
 SOURCES=$(wildcard $(SRC)/*.cpp $(SRC)/$(FEAT)/*.cpp)
 OBJ=$(SOURCES:.cpp=.o)
 
-CFLAGS=-fPIC -I./$(INC) -I./$(INC)/$(FEAT) `pkg-config --cflags opencv` -Wall -O3
+CFLAGS=-fPIC -I./$(INC) -I./$(INC)/$(FEAT) `pkg-config --cflags opencv` -Wall -O3 -msse4.2
 LDFLAGS=-shared -L./$(SRC) `pkg-config --libs opencv`
 EXE=libsfm.so
 

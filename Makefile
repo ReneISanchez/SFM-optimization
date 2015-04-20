@@ -10,7 +10,8 @@ EIGEN_PATH=/usr/local/Cellar/eigen/3.2.2/include/eigen3
 SOURCES=$(wildcard *.cpp)
 OBJ=$(SOURCES:.cpp=.o)
 
-CFLAGS=-I./$(INC) -I./$(INC)/$(FEAT) -I$(EIGEN_PATH) `pkg-config --cflags opencv` -Wall -O2 -g -pg
+#CCFLAGS+= -msse4.2 # enable sse4.2 intrinsic functions
+CFLAGS=-I./$(INC) -I./$(INC)/$(FEAT) -D__SSE4_2__ -I$(EIGEN_PATH) `pkg-config --cflags opencv` -Wall -O2 -g -pg -msse4.2
 LDFLAGS=-L. -L./$(LIB_PATH) -lsfm `pkg-config --libs opencv`
 
 ifeq ($(shell uname -s),Linux)
@@ -22,7 +23,7 @@ EXE=sfm
 #CFLAGS+= -fopenmp
 #LDFLAGS+= -lgomp
 
-all: $(LIB) $(OBJ)
+all: $(LIB) $(OBJ) 
 		$(CC) $(CFLAGS) -o $(EXE) $(OBJ) $(LDFLAGS)
 
 $(LIB):
