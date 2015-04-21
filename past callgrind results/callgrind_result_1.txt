@@ -1,0 +1,101 @@
+--------------------------------------------------------------------------------
+Profile data file 'callgrind.out.28995' (creator: callgrind-3.11.0.SVN)
+--------------------------------------------------------------------------------
+I1 cache: 
+D1 cache: 
+LL cache: 
+Timerange: Basic block 0 - 17061721255
+Trigger: Program termination
+Profiled target:  ./sfm dataset/crazyhorse RICH CPU 0.5 (PID 28995, part 1)
+Events recorded:  Ir
+Events shown:     Ir
+Event sort order: Ir
+Thresholds:       99
+Include dirs:     
+User annotated:   
+Auto-annotation:  off
+
+--------------------------------------------------------------------------------
+             Ir 
+--------------------------------------------------------------------------------
+137,333,073,695  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+            Ir  file:function
+--------------------------------------------------------------------------------
+62,818,075,877  ???:cv::normHamming(unsigned char const*, unsigned char const*, int) [/usr/local/lib/libopencv_core.so.2.4.10]
+15,695,971,947  ???:void cv::GEMMSingleMul<double, double>(double const*, unsigned long, double const*, unsigned long, double const*, unsigned long, double*, unsigned long, cv::Size_<int>, cv::Size_<int>, double, double, int) [/usr/local/lib/libopencv_core.so.2.4.10]
+ 6,198,108,620  ???:cv::Mat::Mat(CvMat const*, bool) [/usr/local/lib/libopencv_core.so.2.4.10]
+ 3,882,005,762  ???:cv::_InputArray::getMat(int) const [/usr/local/lib/libopencv_core.so.2.4.10]
+ 3,235,664,059  ???:cv::cvarrToMat(void const*, bool, bool, int) [/usr/local/lib/libopencv_core.so.2.4.10]
+ 3,166,848,262  ???:cv::BatchDistInvoker::operator()(cv::Range const&) const [/usr/local/lib/libopencv_core.so.2.4.10]
+ 3,158,289,786  ???:cv::batchDistHamming(unsigned char const*, unsigned char const*, unsigned long, int, int, int*, unsigned char const*) [/usr/local/lib/libopencv_core.so.2.4.10]
+ 2,691,312,352  ???:cv::gemm(cv::_InputArray const&, cv::_InputArray const&, double, cv::_InputArray const&, double, cv::_OutputArray const&, int) [/usr/local/lib/libopencv_core.so.2.4.10]
+ 2,496,641,331  ???:cvGEMM [/usr/local/lib/libopencv_core.so.2.4.10]
+ 2,383,654,778  ???:cv::Mat::copyTo(cv::_OutputArray const&) const [/usr/local/lib/libopencv_core.so.2.4.10]
+ 2,059,869,758  ???:cvConvertScale [/usr/local/lib/libopencv_core.so.2.4.10]
+ 1,857,608,239  ???:CvModelEstimator2::runLMeDS(CvMat const*, CvMat const*, CvMat*, CvMat*, double, int) [/usr/local/lib/libopencv_calib3d.so.2.4.10]
+ 1,826,059,117  ???:cv::_OutputArray::create(int, int, int, int, bool, int) const [/usr/local/lib/libopencv_core.so.2.4.10]
+ 1,722,990,745  /build/buildd/eglibc-2.19/malloc/malloc.c:_int_free [/lib/x86_64-linux-gnu/libc-2.19.so]
+ 1,634,573,919  ???:cvProjectPoints2 [/usr/local/lib/libopencv_calib3d.so.2.4.10]
+ 1,516,762,108  /build/buildd/eglibc-2.19/malloc/malloc.c:_int_malloc [/lib/x86_64-linux-gnu/libc-2.19.so]
+ 1,389,322,561  ???:cvRodrigues2 [/usr/local/lib/libopencv_calib3d.so.2.4.10]
+ 1,259,520,492  ???:cv::Mat::~Mat() [/home/ilse/Documents/sfm-cli/sfm]
+ 1,084,601,227  ???:cv::Mat::convertTo(cv::_OutputArray const&, int, double, double) const [/usr/local/lib/libopencv_core.so.2.4.10]
+ 1,055,500,547  /build/buildd/eglibc-2.19/malloc/malloc.c:malloc [/lib/x86_64-linux-gnu/libc-2.19.so]
+   877,872,858  ???:MultiCameraPnP::TriangulatePointsBetweenViews(unsigned int, unsigned int, std::vector<CloudPoint, std::allocator<CloudPoint> >&, std::vector<int, std::allocator<int> >&) [/home/ilse/Documents/sfm-cli/libsfm.so]
+   807,913,626  ???:MultiCameraPnP::Find2D3DCorrespondences(int, std::vector<cv::Point3_<float>, std::allocator<cv::Point3_<float> > >&, std::vector<cv::Point_<float>, std::allocator<cv::Point_<float> > >&) [/home/ilse/Documents/sfm-cli/libsfm.so]
+   733,045,782  ???:cvCopy [/usr/local/lib/libopencv_core.so.2.4.10]
+   705,960,088  ???:CvFMEstimator::computeReprojError(CvMat const*, CvMat const*, CvMat const*, CvMat*) [/usr/local/lib/libopencv_calib3d.so.2.4.10]
+   605,099,754  /build/buildd/eglibc-2.19/string/../sysdeps/x86_64/multiarch/memcpy-sse2-unaligned.S:__memcpy_sse2_unaligned [/lib/x86_64-linux-gnu/libc-2.19.so]
+   597,316,720  ???:cvGetSubRect [/usr/local/lib/libopencv_core.so.2.4.10]
+   560,851,600  ???:cv::fastMalloc(unsigned long) [/usr/local/lib/libopencv_core.so.2.4.10]
+   523,671,736  ???:cv::_InputArray::_InputArray(cv::Mat const&) [/usr/local/lib/libopencv_core.so.2.4.10]
+   514,214,064  ???:cvCreateMatHeader [/usr/local/lib/libopencv_core.so.2.4.10]
+   498,426,012  ???:cv::_InputArray::type(int) const [/usr/local/lib/libopencv_core.so.2.4.10]
+   465,111,985  ???:cv::arithm_op(cv::_InputArray const&, cv::_InputArray const&, cv::_OutputArray const&, cv::_InputArray const&, int, void (**)(unsigned char const*, unsigned long, unsigned char const*, unsigned long, unsigned char*, unsigned long, cv::Size_<int>, void*), bool, void*) [/usr/local/lib/libopencv_core.so.2.4.10]
+   457,010,732  ???:cvReleaseMat [/usr/local/lib/libopencv_core.so.2.4.10]
+   440,754,912  ???:cvCreateData [/usr/local/lib/libopencv_core.so.2.4.10]
+   370,192,900  ???:cv::computeOrbDescriptor(cv::KeyPoint const&, cv::Mat const&, cv::Point_<int> const*, unsigned char*, int, int) [clone .isra.115] [/usr/local/lib/libopencv_features2d.so.2.4.10]
+   362,941,023  ???:cv::_InputArray::kind() const [/usr/local/lib/libopencv_core.so.2.4.10]
+   351,421,569  /build/buildd/eglibc-2.19/malloc/malloc.c:free [/lib/x86_64-linux-gnu/libc-2.19.so]
+   322,001,827  ???:void cv::JacobiSVDImpl_<double>(double*, unsigned long, double*, double*, unsigned long, int, int, int, double, double) [/usr/local/lib/libopencv_core.so.2.4.10]
+   321,301,280  ???:cvGetRows [/usr/local/lib/libopencv_core.so.2.4.10]
+   301,871,938  ???:cv::_OutputArray::_OutputArray(cv::Mat&) [/usr/local/lib/libopencv_core.so.2.4.10]
+   300,285,315  ???:cv::LevMarqSparse::optimize(CvMat&) [/usr/local/lib/libopencv_contrib.so.2.4.10]
+   231,150,971  ???:bool cv::JacobiImpl_<double>(double*, unsigned long, double*, double*, unsigned long, int, unsigned char*) [/usr/local/lib/libopencv_core.so.2.4.10]
+   215,717,671  ???:cv::Ptr<CvMat>::release() [/usr/local/lib/libopencv_calib3d.so.2.4.10]
+   202,557,120  ???:fjac_new(int, int, cv::Mat&, cv::Mat&, cv::Mat&, cv::Mat&, void*) [/usr/local/lib/libopencv_contrib.so.2.4.10]
+   202,160,020  ???:func_new(int, int, cv::Mat&, cv::Mat&, cv::Mat&, void*) [/usr/local/lib/libopencv_contrib.so.2.4.10]
+   193,781,506  ???:cvReshape [/usr/local/lib/libopencv_core.so.2.4.10]
+   193,519,551  ???:cv::NAryMatIterator::init(cv::Mat const**, cv::Mat*, unsigned char**, int) [/usr/local/lib/libopencv_core.so.2.4.10]
+   183,304,488  ???:cv::cvtScale64f(double const*, unsigned long, unsigned char const*, unsigned long, double*, unsigned long, cv::Size_<int>, double*) [/usr/local/lib/libopencv_core.so.2.4.10]
+   179,425,426  /build/buildd/eglibc-2.19/math/../sysdeps/ieee754/dbl-64/s_sin.c:__cos_avx [/lib/x86_64-linux-gnu/libm-2.19.so]
+   177,447,624  ???:cv::LevMarqSparse::ask_for_proj(CvMat&, bool) [/usr/local/lib/libopencv_contrib.so.2.4.10]
+   170,147,064  ???:cv::GEMMSingleMul_64f(double const*, unsigned long, double const*, unsigned long, double const*, unsigned long, double*, unsigned long, cv::Size_<int>, cv::Size_<int>, double, double, int) [/usr/local/lib/libopencv_core.so.2.4.10]
+   165,626,800  ???:cvGetCols [/usr/local/lib/libopencv_core.so.2.4.10]
+   161,967,633  ???:cv::_OutputArray::fixedType() const [/usr/local/lib/libopencv_core.so.2.4.10]
+   159,326,232  ???:cv::transpose(cv::_InputArray const&, cv::_OutputArray const&) [/usr/local/lib/libopencv_core.so.2.4.10]
+   156,398,710  ???:0x0000000000019fc0 [/usr/lib/x86_64-linux-gnu/libjpeg.so.8.0.2]
+   134,312,840  ???:cv::_OutputArray::fixedSize() const [/usr/local/lib/libopencv_core.so.2.4.10]
+   132,848,000  ???:cvTranspose [/usr/local/lib/libopencv_core.so.2.4.10]
+   130,975,806  ???:void cv::vBinOp64f<cv::OpAdd<double, double, double>, cv::_VAdd64f>(double const*, unsigned long, double const*, unsigned long, double*, unsigned long, cv::Size_<int>) [/usr/local/lib/libopencv_core.so.2.4.10]
+   130,249,553  ???:cv::transpose_32sC2(unsigned char const*, unsigned long, unsigned char*, unsigned long, cv::Size_<int>) [/usr/local/lib/libopencv_core.so.2.4.10]
+   129,344,635  ???:cv::_OutputArray::create(cv::Size_<int>, int, int, bool, int) const [/usr/local/lib/libopencv_core.so.2.4.10]
+   118,087,619  ???:CvHomographyEstimator::refine(CvMat const*, CvMat const*, CvMat*, int) [/usr/local/lib/libopencv_calib3d.so.2.4.10]
+   116,328,730  ???:cv::fastFree(void*) [/usr/local/lib/libopencv_core.so.2.4.10]
+   116,214,268  /build/buildd/eglibc-2.19/math/../sysdeps/ieee754/dbl-64/s_sin.c:__sin_avx [/lib/x86_64-linux-gnu/libm-2.19.so]
+   113,438,906  ???:cv::invert(cv::_InputArray const&, cv::_OutputArray const&, int) [/usr/local/lib/libopencv_core.so.2.4.10]
+   107,687,098  ???:cv::Ptr<CvMat>::operator=(cv::Ptr<CvMat> const&) [/usr/local/lib/libopencv_calib3d.so.2.4.10]
+   102,823,497  ???:cvSub [/usr/local/lib/libopencv_core.so.2.4.10]
+   102,009,003  ???:cv::LevMarqSparse::ask_for_projac(CvMat&) [/usr/local/lib/libopencv_contrib.so.2.4.10]
+    91,767,516  ???:cvCloneMat [/usr/local/lib/libopencv_core.so.2.4.10]
+    89,720,139  ???:cv::NAryMatIterator::operator++() [/usr/local/lib/libopencv_core.so.2.4.10]
+    87,539,044  ???:cvAddS [/usr/local/lib/libopencv_core.so.2.4.10]
+    85,898,280  ???:CvHomographyEstimator::computeReprojError(CvMat const*, CvMat const*, CvMat const*, CvMat*) [/usr/local/lib/libopencv_calib3d.so.2.4.10]
+    74,186,621  ???:cv::Mat::create(int, int const*, int) [/usr/local/lib/libopencv_core.so.2.4.10]
+    72,870,336  ???:cvGetDiag [/usr/local/lib/libopencv_core.so.2.4.10]
+    69,441,628  ???:cvCreateMat [/usr/local/lib/libopencv_core.so.2.4.10]
+    63,386,654  ???:0x0000000000030a70 [/usr/lib/x86_64-linux-gnu/libjpeg.so.8.0.2]
+    60,498,736  ???:cvInvert [/usr/local/lib/libopencv_core.so.2.4.10]
+
