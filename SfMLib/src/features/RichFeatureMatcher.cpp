@@ -249,13 +249,12 @@ void RichFeatureMatcher::MatchFeatures(int idx_i, int idx_j, vector<DMatch>* mat
     if (matches->size() == 0) 
     {
         vector < vector<DMatch> > nn_matches;
-        matcher.knnMatch(descriptors_1, descriptors_2, nn_matches, 1);
+    //  matcher.knnMatch(descriptors_1, descriptors_2, nn_matches, 1);
         /*---------------------------------------------------------------------------*/
         std::vector<std::pair<int,int> > minDistance1; // holds minDist from first check
         std::vector<std::pair<int,int> > minDistance2; // holds minDist from cross check
         getDescriptorDist(descriptors_1, descriptors_2, minDistance1); // returns minDistance1
         getDescriptorDist(descriptors_2, descriptors_1, minDistance2); // returns minDistance2
-        verifyCrossCheck(minDistance1, minDistance2, nn_matches);
         /*---------------------------------------------------------------------------*/
         matches->clear();
 
