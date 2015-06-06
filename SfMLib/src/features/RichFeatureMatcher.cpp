@@ -48,43 +48,9 @@
 using namespace std;
 using namespace cv;
 
-static const unsigned char popCountTable[] =
-{
-	0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-	1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-	1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-	1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-	2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-	3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8
-};
-
-/*
-static void getDescriptorDist(const cv::Mat& descriptors_1, const cv::Mat& descriptors_2, std::vector<std::pair<int,int> >& minDist) {
-
-	for (int x = 0; x < descriptors_1.rows; x++)
-	{
-		int min = INT_MAX;
-		int yIdx = 0;
-		for (int y = 0 ; y < descriptors_2.rows ; y++)
-		{
-			int sumHamDist = 0;
-			for (int z = 0; z < descriptors_1.cols; z++){
-				sumHamDist += popCountTable[(descriptors_1.at<unsigned char>(x,z)) ^ (descriptors_2.at<unsigned char>(y,z))];
-			}
-			if (sumHamDist <= min)
-			{
-				min = sumHamDist;
-				yIdx = y;
-			}
-		}
-		minDist.push_back(std::make_pair(yIdx, min));
-	}
-} //--endGetDescriptorDist
-*/
-
-static void getDescriptorDist(const cv::Mat& descriptors_1, const cv::Mat& descriptors_2, std::vector<std::pair<int,int> >& minDist) {
+// Get Hamming distances
+static void getDescriptorDist(const cv::Mat& descriptors_1, 
+    const cv::Mat& descriptors_2, std::vector<std::pair<int,int> >& minDist) {
 
     for (int x = 0; x < descriptors_1.rows; x++)
     {
@@ -176,9 +142,14 @@ static void getDescriptorDist(const cv::Mat& descriptors_1, const cv::Mat& descr
 			c1 = _mm_xor_si128(mDes1_first, mDes2_first);
 			c2 = _mm_xor_si128(mDes1_sec, mDes2_sec);
 			
-			sumHamDist1 = _mm_popcnt_u64(_mm_extract_epi64(c1,0)) + _mm_popcnt_u64(_mm_extract_epi64(c1,1)); //1 shifts first half, 0 doesn't
-			sumHamDist2 = _mm_popcnt_u64(_mm_extract_epi64(c2,0)) + _mm_popcnt_u64(_mm_extract_epi64(c2,1)); //1 shifts first half, 0 doesn't
-			sumHamDist = sumHamDist1 + sumHamDist2;
+			sumHamDist1 = _mm_popcnt_u64(_mm_extract_epi64(c1,0)) + 
+                _mm_popcnt_u64(_mm_extract_epi64(c1,1)); //1 shifts first half, 0 doesn't
+			
+            sumHamDist2 = _mm_popcnt_u64(_mm_extract_epi64(c2,0)) + 
+                _mm_popcnt_u64(_mm_extract_epi64(c2,1)); //1 shifts first half, 0 doesn't
+			
+            // sum the Hamming distances of the 2 halves of xored string
+            sumHamDist = sumHamDist1 + sumHamDist2;
 			
             if (sumHamDist <= min)
             {
@@ -190,7 +161,8 @@ static void getDescriptorDist(const cv::Mat& descriptors_1, const cv::Mat& descr
     }
 } //--endGetDescriptorDist
 
-static void verifyCrossCheck(vector<pair<int,int> >& minDist1, vector<pair<int,int> >& minDist2, vector < vector<DMatch> >& nn_matches) {
+static void verifyCrossCheck(vector<pair<int,int> >& minDist1, 
+    vector<pair<int,int> >& minDist2, vector < vector<DMatch> >& nn_matches) {
 	
 	// size cutoff at smaller vector
     for (unsigned int x = 0; x < minDist1.size() && x < minDist2.size(); x++)
