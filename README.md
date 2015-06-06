@@ -15,4 +15,4 @@ Set the EIGEN\_PATH variable in the top-level Makefile properly, then run `make`
 
 Running a demo
 ==============
-`./sfm dataset/crazyhorse RICH CPU 0.5`
+`./sfm dataset/crazyhorse RICH CPU 0.5` 
