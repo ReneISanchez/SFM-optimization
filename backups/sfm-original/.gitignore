@@ -1,0 +1,6 @@
+sfm_pcl.pcd
+*.o
+*.so
+.project
+.cproject
+sfm
