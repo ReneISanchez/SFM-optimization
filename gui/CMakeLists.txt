@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 project(sfm-gui)
 
+find_package(Qt5Widgets) 
+
 # ----------------------------------------------
 # OpenCV
 # ----------------------------------------------
@@ -50,6 +52,7 @@ add_executable (sfm-gui ${sfm-gui_SRC})
 
 target_link_libraries (sfm-gui ${PCL_LIBRARIES})
 target_link_libraries (sfm-gui ${OpenCV_LIBRARIES})
+target_link_libraries (sfm-gui Qt5::Widgets)
 target_link_libraries (sfm-gui sfm)
 
 
