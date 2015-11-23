@@ -4,7 +4,7 @@ LIB_PATH=SfMLib
 INC=$(LIB_PATH)/inc
 FEAT=features
 
-EIGEN_PATH=/usr/local/Cellar/eigen/3.2.2/include/eigen3
+EIGEN_PATH=/usr/include/eigen3
 
 
 SOURCES=$(wildcard *.cpp)

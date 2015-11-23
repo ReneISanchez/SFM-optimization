@@ -51,9 +51,6 @@ using namespace cv;
 std::vector<cv::Mat> images;
 std::vector<std::string> images_names;
 
-void open_imgs_dir(char* dir_name, std::vector<cv::Mat>& images,
-        std::vector<std::string>& images_names);
-
 void fix_affinity()
 {
     int error=0;

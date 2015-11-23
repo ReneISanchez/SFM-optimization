@@ -42,11 +42,11 @@
 class MultiCameraPnP
 {
 protected:
-	std::vector<std::vector<cv::KeyPoint> > imgpts;
+	std::vector<std::vector<cv::KeyPoint> > imgpts; ///< List of key points for each image
 	std::vector<std::vector<cv::KeyPoint> > fullpts;
 	std::vector<std::vector<cv::KeyPoint> > imgpts_good;
 
-	std::map<std::pair<int,int> ,std::vector<cv::DMatch> > matches_matrix;
+	std::map<std::pair<int,int>, std::vector<cv::DMatch> > matches_matrix;
 	
 	std::vector<cv::Mat_<cv::Vec3b> > imgs_orig;
 	std::vector<cv::Mat> imgs;
@@ -73,21 +73,12 @@ protected:
 	std::vector<cv::Vec3b> pointCloudRGB_beforeBA;
 
 public:
-	MultiCameraPnP(
-		const std::vector<cv::Mat>& imgs_, 
-		const std::vector<std::string>& imgs_names_, 
-		const std::string& imgs_path_):
-			imgs_names(imgs_names_),
-			features_matched(false),
-			use_rich_features(true),
-			use_gpu(false)
-    {
-		setImages(imgs_,imgs_names_,imgs_path_);
-    }
+	MultiCameraPnP();
 
-	MultiCameraPnP():features_matched(false),use_rich_features(true),use_gpu(false)
-	{
-	}
+	MultiCameraPnP(const std::vector<cv::Mat>& imgs_,
+			const std::vector<std::string>& imgs_names_,
+			const std::string& imgs_path_);
+
 	
 	void RecoverDepthFromImages();
 
@@ -102,6 +93,9 @@ public:
 	
 	void init(const std::string& imgs_path_);
 
+	/**
+	 * Matches features between all pairs of images.
+	 */
 	void OnlyMatchFeatures();
 
 	std::vector<cv::Point3d> getPointCloudBeforeBA()

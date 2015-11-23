@@ -38,6 +38,14 @@
 bool CheckCoherentRotation(cv::Mat_<double>& R);
 bool TestTriangulation(const std::vector<CloudPoint>& pcloud, const cv::Matx34d& P, std::vector<uchar>& status);
 
+/**
+ * Find the fundamental matrix between two images based on matched features.
+ * @param[in]     imgpts1
+ * @param[in]     imgpts2
+ * @param[out]    imgpts1_good
+ * @param[out]    imgpts2_good
+ * @param[in,out] matches Matches from image 1 to image 2. Is replaced by good matches only after getting F.
+ */
 cv::Mat GetFundamentalMat(	const std::vector<cv::KeyPoint>& imgpts1,
 							const std::vector<cv::KeyPoint>& imgpts2,
 							std::vector<cv::KeyPoint>& imgpts1_good,

@@ -60,13 +60,16 @@ vector<cv::Point3d> CloudPointsToPoints(const vector<CloudPoint> cpts)
 	return out;
 }
 
-void GetAlignedPointsFromMatch(const vector<cv::KeyPoint>& imgpts1,
-		const vector<cv::KeyPoint>& imgpts2, const vector<cv::DMatch>& matches,
-		vector<cv::KeyPoint>& pt_set1, vector<cv::KeyPoint>& pt_set2) 
+void GetAlignedPointsFromMatch(
+		const vector<cv::KeyPoint>& imgpts1,
+		const vector<cv::KeyPoint>& imgpts2,
+		const vector<cv::DMatch>& matches,
+		vector<cv::KeyPoint>& pt_set1,
+		vector<cv::KeyPoint>& pt_set2)
 {
 	for (unsigned int i = 0; i < matches.size(); i++) 
 	{
-//		cout << "matches[i].queryIdx " << matches[i].queryIdx << " matches[i].trainIdx " << matches[i].trainIdx << endl;
+		//cout << "matches[i].queryIdx " << matches[i].queryIdx << " matches[i].trainIdx " << matches[i].trainIdx << endl;
 		pt_set1.push_back(imgpts1[matches[i].queryIdx]);
 		pt_set2.push_back(imgpts2[matches[i].trainIdx]);
 	}
