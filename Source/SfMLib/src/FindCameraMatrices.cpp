@@ -445,7 +445,7 @@ bool FindCameraMatrices(const Mat& K,
 		Mat_<double> E = K.t() * F * K; //according to HZ (9.12)
 
 		// According to http://en.wikipedia.org/wiki/Essential_matrix#Properties_of_the_essential_matrix
-		if (fabsf(determinant(E)) > 1e-07) 
+		if (fabsf(determinant(E)) > 1e-04) // 1e-07
 		{
 			cout << "det(E) != 0 : " << determinant(E) << "\n";
 			P1 = 0;

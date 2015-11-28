@@ -74,7 +74,7 @@ void CloudViewer::viewerOneOff (pcl::visualization::PCLVisualizer& viewer)
 void CloudViewer::viewerPsycho (pcl::visualization::PCLVisualizer& viewer)
 //---------------------------------------------------
 {
-    viewer.setCameraClipDistances(0.0001, 1000);
+    viewer.setCameraClipDistances(0.0001, 100000);
 }
 
 

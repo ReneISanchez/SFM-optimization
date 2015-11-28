@@ -3,10 +3,12 @@ SRC=src
 INC=inc
 FEAT=features
 
+DEBUG_INFO=-g
+
 SOURCES=$(wildcard $(SRC)/*.cpp $(SRC)/$(FEAT)/*.cpp)
 OBJ=$(SOURCES:.cpp=.o)
 #-march=native
-CFLAGS=-fPIC -I./$(INC) -I./$(INC)/$(FEAT) `pkg-config --cflags opencv` -Wall -O3 -march=native -msse4.2
+CFLAGS=-fPIC -I./$(INC) -I./$(INC)/$(FEAT) `pkg-config --cflags opencv` -Wall -O3 -march=native -msse4.2 $(DEBUG_INFO)
 LDFLAGS=-shared -L./$(SRC) `pkg-config --libs opencv`
 EXE=libsfm.so
 
