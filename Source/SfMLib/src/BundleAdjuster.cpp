@@ -145,7 +145,7 @@ void* threadFunc1(void* thread)
 	if ((t->pointcloud[t->pt3d]).imgpt_for_img[t->pt3d_img] >= 0)
 	{
 		cout << "t->pointcloud[t->pt3d]).imgpt_for_img[t->pt3d_img] >= 0" << endl;
-		cout << "before impending doom" << endl;
+		cout << "Before impending doom" << endl;
 		cout << "t->thread_num = " << t->thread_num << endl;
 		cout << "t->pt3d_img = " << t->pt3d_img << endl;
 		cout << "t->global_cam_id_to_local_id[t->pt3d_img] = " << t->global_cam_id_to_local_id[t->pt3d_img] << endl;
