@@ -56,7 +56,7 @@ imgpts(imgpts_),use_ratio_test(true)
 
 	extractor = new gpu::SURF_GPU();
 
-	std::cout << " -------------------- extract feature points for all images (GPU) -------------------\n";
+	//std::cout << " -------------------- extract feature points for all images (GPU) -------------------\n";
 
 	imgpts.resize(imgs_.size());
 	descriptors.resize(imgs_.size());
@@ -110,7 +110,7 @@ void GPUSURFFeatureMatcher::MatchFeatures(int idx_i, int idx_j, vector<DMatch>* 
 	}
 	if (matches->size() == 0)
 	{
-		cout << "match " << descriptors_1.rows << " vs. " << descriptors_2.rows << " ...";
+		//cout << "match " << descriptors_1.rows << " vs. " << descriptors_2.rows << " ...";
 
 		if (use_ratio_test)
 		{
@@ -131,7 +131,7 @@ void GPUSURFFeatureMatcher::MatchFeatures(int idx_i, int idx_j, vector<DMatch>* 
 					(*matches).push_back(knn_matches[i][0]);
 				}
 			}
-			cout << "kept " << (*matches).size() << " features after ratio test"<<endl;
+		//	cout << "kept " << (*matches).size() << " features after ratio test"<<endl;
 		} 
 		else 
 		{

@@ -31,6 +31,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
+#include <arrayfire.h>
+
 
 #ifndef WIN32
 #include <dirent.h>
@@ -38,6 +40,7 @@
 
 using namespace std;
 using namespace cv;
+using namespace af;
 
 vector<cv::DMatch> FlipMatches(const vector<cv::DMatch>& matches) 
 {
@@ -172,12 +175,14 @@ void imshow_250x250(const string& name_, const Mat& patch)
 {
 	Mat bigpatch;
 	cv::resize(patch, bigpatch, Size(250, 250));
+	cout << "+1 image matrix creation" << endl;
 	imshow(name_, bigpatch);
 }
 
 void open_imgs_dir(const char* dir_name, vector<cv::Mat>& images,
 		vector<string>& images_names, double downscale_factor) 
 {
+
 	if (dir_name == NULL) 
 	{
 		return;
@@ -271,5 +276,6 @@ void open_imgs_dir(const char* dir_name, vector<cv::Mat>& images,
 		images_names.push_back(files_[i]);
 		images.push_back(m_);
 	}
+	cout << "+" << files_.size() << " image matrices created" << endl;
 
 }

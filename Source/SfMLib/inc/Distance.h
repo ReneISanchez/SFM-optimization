@@ -58,13 +58,16 @@ private:
 
 	cv::Mat cam_matrix,distortion_coeff;
 	
-	std::vector<CloudPoint> pointcloud;
+	//extern std::vector<CloudPoint> pointcloud;
 	std::vector<cv::KeyPoint> correspImg1Pt;
 	std::vector<cv::Vec3b> pointcloudRGB;
 	
 	bool features_matched;
 
 public:
+	
+	cv::vector<CloudPoint> pointcloud;
+	
 	std::vector<cv::Point3d> getPointCloud()
 	{
 		return CloudPointsToPoints(pointcloud);

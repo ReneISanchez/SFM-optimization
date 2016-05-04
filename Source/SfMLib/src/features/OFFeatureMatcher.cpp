@@ -71,13 +71,14 @@ void OFFeatureMatcher::MatchFeatures(int idx_i, int idx_j,
 	{
 		cvtColor(imgs[idx_i], prevgray, CV_RGB2GRAY);
 		cvtColor(imgs[idx_j], gray, CV_RGB2GRAY);
+		cout << "+2 image mat creation" << endl;
 	}
 	else 
 	{
 		prevgray = imgs[idx_i];
 		gray = imgs[idx_j];
 	}
-
+	
 	vector < uchar > vstatus(i_pts.size());
 	vector<float> verror(i_pts.size());
 
@@ -101,6 +102,7 @@ void OFFeatureMatcher::MatchFeatures(int idx_i, int idx_j,
 		gpu_error.download(verror_mat);
 		Mat(vstatus_mat.t()).copyTo(Mat(vstatus));
 		Mat(verror_mat.t()).copyTo(Mat(verror));
+		cout << "+3 matrix copying" << endl;
 	} 
 	else
 #endif
@@ -167,7 +169,7 @@ CV_PROFILE("Prune",
 		}
 	}
 		)
-		cout << "pruned " << matches->size() << " / " << knn_matches.size() << " matches" << endl;
+		//cout << "pruned " << matches->size() << " / " << knn_matches.size() << " matches" << endl;
 #if 0
 #ifdef __SFM__DEBUG__
 			{

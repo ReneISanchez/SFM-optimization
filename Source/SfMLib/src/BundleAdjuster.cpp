@@ -1,8 +1,8 @@
 /*
- *  BundleAdjuster.cpp
+*  BundleAdjuster.cpp
  *  ExploringSfMWithOpenCV
  *
- *  Created by Roy Shilkrot on 5/18/12.
+ *  Created by Roy Shilkrot on 5/1812.
  *  The MIT License (MIT)
  *
  *  Copyright (c) 2013 Roy Shilkrot
@@ -29,6 +29,11 @@
 
 #include "BundleAdjuster.h"
 #include "Common.h"
+#include <pthread.h>
+#include <mutex>
+#include <unistd.h>
+#include <time.h>
+#include <chrono>
 
 using namespace cv;
 using namespace std;
@@ -36,6 +41,9 @@ using namespace std;
 #ifndef HAVE_SSBA
 #include <opencv2/contrib/contrib.hpp>
 #endif
+
+std::mutex mtx;
+int local_cam_count = 0;
 
 #ifdef HAVE_SSBA
 #define V3DLIB_ENABLE_SUITESPARSE
@@ -45,9 +53,18 @@ using namespace std;
 #include "../3rdparty/SSBA-3.0/Geometry/v3d_metricbundle.h"
 
 using namespace V3D;
+//std::mutex mtx;
+//pthread_mutex_t mtx;
+//int local_cam_count = 0;
 
+/* HOW TO USE mtx:
+ *Inside of a multi-thread function:
+  mtx.lock() 
+  [Critical section]
+  mtx.unlock()
+*/
 namespace
-{
+{AAAAAA
 
 	inline void
 	showErrorStatistics(double const f0,
@@ -86,6 +103,228 @@ namespace
 
 #endif
 
+/********************************************************************/
+/**********************  ALL THREAD STUFF GOES HERE *****************/
+/********************************************************************/
+typedef struct 
+{
+	int thread_num;
+
+	int pt3d_img;
+	int pt3d;
+
+	Mat_<double> xPt_img; //What is gonna get updated
+	vector< vector<int> > visibility;
+
+	vector<int> global_cam_id_to_local_id;
+	vector<int> local_cam_id_to_global_id;
+    vector <CloudPoint> pointcloud;
+	vector< vector<Point2d> > imagePoints;
+	vector< vector<cv::KeyPoint> > imgpts;
+
+	map<int,cv::Matx34d> Pmats;
+	cv::Mat_<double> cam_matrix;
+} threadTuple;
+
+//TODO
+//All threads created in the above function will run this thread, and die after they are done
+// executing it. The threadTuple values changed in this thread will be saved.
+
+//TODO two different functions for each inner for loop
+//TODO change parameters of functions to include what gettting compiler errors for
+
+
+//used to replace first for loop
+void* threadFunc1(void* thread) 
+{
+	cout << "Start of threadFunc1" << endl;
+	threadTuple *t = (threadTuple*) thread;
+	cout << "after converting to threadTuple" << endl;
+
+
+	if ((t->pointcloud[t->pt3d]).imgpt_for_img[t->pt3d_img] >= 0)
+	{
+		cout << "t->pointcloud[t->pt3d]).imgpt_for_img[t->pt3d_img] >= 0" << endl;
+		cout << "before impending doom" << endl;
+		cout << "t->thread_num = " << t->thread_num << endl;
+		cout << "t->pt3d_img = " << t->pt3d_img << endl;
+		cout << "t->global_cam_id_to_local_id[t->pt3d_img] = " << t->global_cam_id_to_local_id[t->pt3d_img] << endl;
+		cout << "after doom" << endl;
+		if (t->global_cam_id_to_local_id[t->pt3d_img] < 0)
+		{
+			cout << "  t->global_cam_id_to_local_id[t->pt3d_img] < 0" << endl;
+			//pthread_mutex_lock(&mtx);
+			cout << "right before mtx" << endl;
+			mtx.lock();
+			t->local_cam_id_to_global_id[local_cam_count] = t->pt3d_img;
+			t->global_cam_id_to_local_id[t->pt3d_img] = local_cam_count++;
+			//pthread_mutex_unlock(&mtx);
+			mtx.unlock();
+			cout << "after mtx" << endl;
+		}
+		else
+		{
+			cout << "  t->global_cam_id_to_local_id[t->pt3d_img] >= 0  (not if)" << endl;
+		}
+		
+		int local_cam_id = t->global_cam_id_to_local_id[t->pt3d_img];
+		cout << "local_cam_id: " << local_cam_id << endl;
+
+		//2d point
+		Point2d pt2d_for_pt3d_in_img = 
+			t->imgpts[t->pt3d_img][t->pointcloud[t->pt3d].imgpt_for_img[t->pt3d_img]].pt;
+
+		t->imagePoints[local_cam_id][t->pt3d] = pt2d_for_pt3d_in_img;
+		cout << "assigned 2d pt" << endl;
+
+		//visibility in this camera
+		t->visibility[local_cam_id][t->pt3d] = 1;
+		cout << "assigned visibility" << endl;
+	}
+
+	cout << "end of function1" << endl;
+}
+
+
+void* threadFunc2(void* thread)
+{
+	threadTuple *t = (threadTuple*) thread;
+
+	if ((t->pointcloud[t->pt3d]).imgpt_for_img[t->pt3d_img] < 0)
+	{
+		vector<int>::iterator local_it = find(t->local_cam_id_to_global_id.begin(),
+				t->local_cam_id_to_global_id.end(), t->pt3d_img);
+
+		if(local_it != t->local_cam_id_to_global_id.end())
+		{
+			int local_id = local_it - t->local_cam_id_to_global_id.begin();
+
+			if (local_id >= 0)
+			{
+				Mat_<double> X = 
+					(Mat_<double>(4,1) << t->pointcloud[t->pt3d].pt.x, 
+					 t->pointcloud[t->pt3d].pt.y, t->pointcloud[t->pt3d].pt.z, 1);
+				Mat_<double> P(3, 4,t->Pmats[t->pt3d_img].val);
+				Mat_<double> KP = t->cam_matrix * P;
+				Mat_<double> xPt_img = KP * X;
+
+				Point2d xPt_img_(xPt_img(0) / xPt_img(2), 
+						xPt_img(1) / xPt_img(2));
+
+				t->imagePoints[local_id][t->pt3d] = xPt_img_;
+
+				t->visibility[local_id][t->pt3d] = 0;
+			}
+		}
+	}
+/*
+	cout << "t.thread_num: " << t->thread_num << endl;
+	cout << "t.pt3d: " << t->pt3d << endl;
+	cout << "t.pt3d_img: " << t->pt3d_img << endl;
+	cout << "t.xPt_img: " << t->xPt_img << endl;
+	cout << "t.vis: " << t->visibility[0][0][0] << endl;
+	cout << endl;
+*/
+}
+
+int t_finished = 0;
+
+
+void* matMulThread(void* thread){
+	threadFunc1(thread);
+	threadFunc2(thread);
+	t_finished++;
+}
+
+int create_matmul_threads(int numThreads, int num_global_cams, int point_cloud_size, int pmats_size, vector< vector<int> > visibility, 
+						vector<CloudPoint> pointcloud, map<int, cv::Matx34d> pmats, cv::Mat_<double> cam_matrix2)
+{
+	int i,j,k;
+
+	cout << "numThreads: " << numThreads << endl;
+
+	//Create the thread identifiers
+	pthread_t threads[numThreads];
+
+	cout << "Created pthreads" << endl;
+	cout << std::flush << endl;
+
+	//Create the thread tuples that will be passed into the thread function
+	cout << "Right before struct array" << endl;
+	threadTuple* t = new threadTuple[numThreads];
+
+	cout << "Created struct array" << endl;
+	cout << std::flush << endl;
+
+	//Initialize threads tuples  
+	int t_num = 0;
+	int t_copy = 0;
+	int prev = 0;
+	for(i = 0; i < point_cloud_size; i++){
+		for(j = 0; j < num_global_cams; j++){
+			//cout << "thread_num: " << i*num_global_cams + j << endl;
+			t_num = i*num_global_cams + j;
+			t[t_num].thread_num = t_num;
+			t[t_num].pt3d = i;			//first loop
+			//cout << "Got here" << endl; 
+			t[t_num].pt3d_img = j;		//second loop
+			//cout << "And here" << endl;
+			t[t_num].xPt_img = 0;	
+			//cout << "Here too" << endl;
+			t[t_num].visibility = visibility;
+			//cout << "too" << endl;
+			t[t_num].pointcloud = pointcloud;
+			//cout << "too 2" << endl;
+			t[t_num].Pmats = pmats;
+			//cout << "too 3" << endl;
+			t[t_num].cam_matrix = cam_matrix2;
+			//cout << "last one" << endl;
+			t_copy++;
+
+			if(t_copy >=  1000){
+				cout << "Right before thread creation" << endl;
+				for(k = prev; k < t_num; k++){
+					pthread_create(&threads[k], NULL, matMulThread, (void*) &t[k]);
+				}
+				while(t_finished < t_num);
+				prev = t_num + 1;
+				t_copy = 0;
+				cout << "Finished thread batch" << endl;
+			}
+		}
+	
+	}
+
+	//Run any remaining threads
+	if(t_copy > 0){
+		cout << "Last thread creation" << endl;
+		for( k = prev; k < t_num; k++){
+			pthread_create(&threads[k], NULL, matMulThread, (void*) &t[k]);
+		}
+		while(t_finished < t_num);
+	}
+
+/*
+	//Launch the threads. 
+	//Note: Might be worth executing this in parallel on the CPU
+	for(i = 0; i < point_cloud_size*num_global_cams; i++){
+		pthread_create(&threads[i], NULL, matMulThread, (void*) &t[i]);
+	}
+
+*/
+	//Wait until all threads are finished
+	while(t_finished < numThreads);
+
+	return 0;
+}
+
+
+/******************************************************************/
+/*********************  END OF THREAD STUFF  **********************/
+/******************************************************************/
+
+
+
 //count number of 2D measurements
 int BundleAdjuster::Count2DMeasurements(const vector<CloudPoint>& pointcloud) 
 {
@@ -122,6 +361,7 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 	//conver camera intrinsics to BA datastructs
 	Matrix3x3d KMat;
 	makeIdentityMatrix(KMat);
+	cout << "+1 simple mat declaration" << endl;
 	KMat[0][0] = cam_matrix.at<double>(0,0);//fx
 	KMat[1][1] = cam_matrix.at<double>(1,1);//fy
 	KMat[0][1] = cam_matrix.at<double>(0,1);//skew
@@ -129,7 +369,7 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 	KMat[1][2] = cam_matrix.at<double>(1,2);//ppy
 
 	double const f0 = KMat[0][0];
-	cout << "intrinsic before bundle = "; displayMatrix(KMat);
+	//cout << "intrinsic before bundle = "; displayMatrix(KMat);
 	Matrix3x3d Knorm = KMat;
 	// Normalize the intrinsic to have unit focal length.
 	scaleMatrixIP(1.0/f0, Knorm);
@@ -149,7 +389,7 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 		pointIdFwdMap[j] = pointId;
 		pointIdBwdMap.insert(make_pair(pointId, j));
 	}
-	cout << "Read the 3D points." << endl;
+	//cout << "Read the 3D points." << endl;
 
 	vector<int> camIdFwdMap(N,-1);
 	map<int, int> camIdBwdMap;
@@ -175,7 +415,7 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 		cams[i].setRotation(R);
 		cams[i].setTranslation(T);
 	}
-	cout << "Read the cameras." << endl;
+	//cout << "Read the cameras." << endl;
 
 	vector<Vector2d > measurements;
 	vector<int> correspondingView;
@@ -215,7 +455,7 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 
 	K = measurements.size();
 
-	cout << "Read " << K << " valid 2D measurements." << endl;
+//	cout << "Read " << K << " valid 2D measurements." << endl;
 
 	showErrorStatistics(f0, distortion, cams, Xs, measurements, correspondingView, correspondingPoint);
 
@@ -223,7 +463,7 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 	double const inlierThreshold = 2.0 / fabs(f0);
 
 	Matrix3x3d K0 = cams[0].getIntrinsic();
-	cout << "K0 = "; displayMatrix(K0);
+	//cout << "K0 = "; displayMatrix(K0);
 
 	bool good_adjustment = false;
 	{
@@ -237,12 +477,12 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 		opt.maxIterations = 50;
 		opt.minimize();
 
-		cout << "optimizer status = " << opt.status << endl;
+		//cout << "optimizer status = " << opt.status << endl;
 
 		good_adjustment = (opt.status != 2);
 	}
 
-	cout << "refined K = "; displayMatrix(K0);
+	//cout << "refined K = "; displayMatrix(K0);
 
 	for (int i = 0; i < N; ++i)
 	{
@@ -252,7 +492,7 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 	Matrix3x3d Knew = K0;
 	scaleMatrixIP(f0, Knew);
 	Knew[2][2] = 1.0;
-	cout << "Knew = "; displayMatrix(Knew);
+	//cout << "Knew = "; displayMatrix(Knew);
 
 	showErrorStatistics(f0, distortion, cams, Xs, measurements, correspondingView, correspondingPoint);
 
@@ -320,6 +560,18 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 	vector<int> local_cam_id_to_global_id(N, -1);
 	int local_cam_count = 0;
 
+	//cout << "Start of thread test" << endl;
+
+	clock_t t1,t2;
+	t1=clock();
+	create_matmul_threads(num_global_cams*pointcloud.size(), num_global_cams,
+				pointcloud.size(), Pmats.size(), visibility, pointcloud, Pmats, cam_matrix);
+	t2=clock();
+	float diff ((float)t2-(float)t1);
+	cout << "Total time of thread section: " << diff << endl;
+	//cout << "End of thread test" << endl;
+	exit(1);
+/*
 	for (unsigned int pt3d = 0; pt3d < pointcloud.size(); pt3d++) 
 	{
 		points[pt3d] = pointcloud[pt3d].pt;
@@ -368,6 +620,16 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 						Mat_<double> P(3, 4, Pmats[pt3d_img].val);
 						Mat_<double> KP = cam_matrix * P;
 						Mat_<double> xPt_img = KP * X;
+						//cout << " +2 mul " << endl;
+						/*cout << "Matrix P rows: " << P.rows << endl;
+						cout << "Matrix P cols: " << P.cols << endl;
+
+						cout << "Matrix cam_matrix rows: " << cam_matrix.rows << endl;
+						cout << "Matrix cam_matrix cols: " << cam_matrix.cols << endl;
+
+						cout << "Matrix X rows: " << X.rows << endl;
+						cout << "Matrix X cols: " << X.cols << endl; */
+					/*
 						Point2d xPt_img_(xPt_img(0) / xPt_img(2),
 								xPt_img(1) / xPt_img(2));
 
@@ -378,6 +640,8 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 			}
 		}
 	}
+*/
+	cout << "+" << 2*num_global_cams*2 << " 3x3 matrix muls" << endl;
 
 	for (int i = 0; i < N; i++) 
 	{
@@ -403,7 +667,7 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 
 	}
 
-	cout << "Adjust bundle... \n";
+	//cout << "Adjust bundle... \n";
 	cv::LevMarqSparse::bundleAdjust(points, imagePoints, visibility,
 			cameraMatrix, R, T, distCoeffs);
 	cout << "DONE\n";

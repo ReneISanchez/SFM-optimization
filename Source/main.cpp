@@ -37,7 +37,7 @@
 #include <sched.h>
 #include <unistd.h>
 #include <sys/types.h>
-
+#include <arrayfire.h>
 
 #define CPU_N 0 // affinity process
 
@@ -47,6 +47,8 @@ using namespace cv;
 #ifdef HAVE_OPENCV_GPU
 #include <opencv2/gpu/gpu.hpp>
 #endif
+
+using namespace af;
 
 std::vector<cv::Mat> images;
 std::vector<std::string> images_names;
@@ -83,6 +85,14 @@ void fix_affinity()
 
 int main(int argc, char** argv) 
 {
+	//Mat A;
+	//A = imread(argv[1], CV_LOAD_IMAGE_COLOR);
+	//array zeros = constant(0,3);	
+	//array img = loadImageNative(argv[1]);
+	open_imgs_dir(argv[1], images, images_names, 1.0);
+	//exit(1);
+
+
     fix_affinity();
     if (argc < 2) 
     {
@@ -92,13 +102,16 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    double downscale_factor = 1.0;
-    if (argc >= 5) 
+	//cerr << "Hello world!" << endl;
+	//exit(1);
+
+   // double downscale_factor = 1.0;
+/*    if (argc >= 5) 
     {
         downscale_factor = atof(argv[4]);
-    }
+    }*/
 
-    open_imgs_dir(argv[1], images, images_names, downscale_factor);
+    //open_imgs_dir(argv[1], images, images_names, downscale_factor);
     if (images.size() == 0) 
     {
         cerr << "[Error] can't get image files" << endl;

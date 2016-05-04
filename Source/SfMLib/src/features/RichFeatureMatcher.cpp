@@ -114,8 +114,8 @@ RichFeatureMatcher::RichFeatureMatcher(std::vector<cv::Mat>& imgs_,
     detector = FeatureDetector::create("PyramidFAST");
     extractor = DescriptorExtractor::create("ORB");
 
-    std::cout
-        << " -------------------- extract feature points for all images -------------------\n";
+//    std::cout
+//        << " -------------------- extract feature points for all images -------------------\n";
 
     detector->detect(imgs, imgpts);
     extractor->compute(imgs, imgpts, descriptors);
@@ -136,10 +136,10 @@ void RichFeatureMatcher::MatchFeatures(int idx_i, int idx_j, vector<DMatch>* mat
     std::vector<DMatch> good_matches_, very_good_matches_;
     std::vector<KeyPoint> keypoints_1, keypoints_2;
 
-    cout << "imgpts1 has " << imgpts1.size() << " points (descriptors "
-        << descriptors_1.rows << ")" << endl;
-    cout << "imgpts2 has " << imgpts2.size() << " points (descriptors "
-        << descriptors_2.rows << ")" << endl;
+//    cout << "imgpts1 has " << imgpts1.size() << " points (descriptors "
+//        << descriptors_1.rows << ")" << endl;
+//    cout << "imgpts2 has " << imgpts2.size() << " points (descriptors "
+//        << descriptors_2.rows << ")" << endl;
 
     keypoints_1 = imgpts1;
     keypoints_2 = imgpts2;
@@ -180,8 +180,8 @@ void RichFeatureMatcher::MatchFeatures(int idx_i, int idx_j, vector<DMatch>* mat
 		}
 	}
 
-	cout << "Keep " << good_matches_.size() << " out of " << nn_matches.size()
-        		<< " matches" << endl;
+//	cout << "Keep " << good_matches_.size() << " out of " << nn_matches.size()
+//        		<< " matches" << endl;
 
 	*matches = good_matches_;
 
@@ -233,8 +233,8 @@ void RichFeatureMatcher::MatchFeatures(int idx_i, int idx_j, vector<DMatch>* mat
     cv::minMaxIdx(dists, &min_dist, &max_dist);
 
 #ifdef __SFM__DEBUG__
-    printf("-- Max dist : %f \n", max_dist );
-    printf("-- Min dist : %f \n", min_dist );
+//    printf("-- Max dist : %f \n", max_dist );
+//    printf("-- Min dist : %f \n", min_dist );
 #endif
 
     vector<KeyPoint> imgpts1_good, imgpts2_good;
@@ -270,8 +270,8 @@ void RichFeatureMatcher::MatchFeatures(int idx_i, int idx_j, vector<DMatch>* mat
         }
     }
 
-    cout << "Keep " << good_matches_.size() << " out of " << matches->size()
-        << " matches" << endl;
+//    cout << "Keep " << good_matches_.size() << " out of " << matches->size()
+//        << " matches" << endl;
 
     *matches = good_matches_;
 

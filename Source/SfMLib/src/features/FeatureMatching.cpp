@@ -53,26 +53,26 @@ void MatchFeatures(const Mat& img_1, const Mat& img_1_orig, const Mat& img_2,
 	bool update_imgpts1 = (imgpts1.size() <= 0);
 	bool update_imgpts2 = (imgpts2.size() <= 0);
 
-	cout
-			<< "----------------------------------------------------------------------"
-			<< endl;
+//	cout
+//			<< "----------------------------------------------------------------------"
+//			<< endl;
 	if (update_imgpts1) 
 	{
 		cout << "imgpts1 empty, get new" << endl;
 	} 
 	else 
 	{
-		cout << "imgpts1 has " << imgpts1.size() << " points (descriptors "
-				<< descriptors_1.rows << ")" << endl;
+//		cout << "imgpts1 has " << imgpts1.size() << " points (descriptors "
+//				<< descriptors_1.rows << ")" << endl;
 	}
 	if (update_imgpts2) 
 	{
-		cout << "imgpts2 empty, get new" << endl;
+//		cout << "imgpts2 empty, get new" << endl;
 	} 
 	else 
 	{
-		cout << "imgpts2 has " << imgpts2.size() << " points (descriptors "
-				<< descriptors_2.rows << ")" << endl;
+//		cout << "imgpts2 has " << imgpts2.size() << " points (descriptors "
+//				<< descriptors_2.rows << ")" << endl;
 	}
 
 	if (use_features_for_matching) 
@@ -133,13 +133,13 @@ void MatchFeatures(const Mat& img_1, const Mat& img_1_orig, const Mat& img_2,
 		if (matches->size() == 0) 
 		{
 #ifdef __SFM__DEBUG__
-			cout << "matching desc1="<<descriptors_1.rows<<", desc2="<<descriptors_2.rows<<endl;
+//			cout << "matching desc1="<<descriptors_1.rows<<", desc2="<<descriptors_2.rows<<endl;
 #endif
 			matcher.match(descriptors_1, descriptors_2, *matches);
 		}
 
 #ifdef __SFM__DEBUG__
-		cout << "matches->size() " << matches->size() << endl;
+//		cout << "matches->size() " << matches->size() << endl;
 #endif
 
 		double max_dist = 0;
@@ -159,8 +159,8 @@ void MatchFeatures(const Mat& img_1, const Mat& img_1_orig, const Mat& img_2,
 		}
 
 #ifdef __SFM__DEBUG__
-		printf("-- Max dist : %f \n", max_dist );
-		printf("-- Min dist : %f \n", min_dist );
+//		printf("-- Max dist : %f \n", max_dist );
+//		printf("-- Min dist : %f \n", min_dist );
 #endif
 
 		vector<KeyPoint> imgpts1_good, imgpts2_good;
@@ -193,8 +193,8 @@ void MatchFeatures(const Mat& img_1, const Mat& img_1_orig, const Mat& img_2,
 		}
 
 #ifdef __SFM__DEBUG__
-		cout << "keypoints_1.size() " << keypoints_1.size() << " imgpts1_good.size() " << imgpts1_good.size() << endl;
-		cout << "keypoints_2.size() " << keypoints_2.size() << " imgpts2_good.size() " << imgpts2_good.size() << endl;
+	//	cout << "keypoints_1.size() " << keypoints_1.size() << " imgpts1_good.size() " << imgpts1_good.size() << endl;
+	//	cout << "keypoints_2.size() " << keypoints_2.size() << " imgpts2_good.size() " << imgpts2_good.size() << endl;
 
 		{
 			//-- Draw only "good" matches
@@ -220,14 +220,14 @@ void MatchFeatures(const Mat& img_1, const Mat& img_1_orig, const Mat& img_2,
 			KeyPointsToPoints(imgpts1_good, pts1);
 			KeyPointsToPoints(imgpts2_good, pts2);
 #ifdef __SFM__DEBUG__
-			cout << "pts1 " << pts1.size() << " (orig pts " << imgpts1_good.size() << ")" << endl;
-			cout << "pts2 " << pts2.size() << " (orig pts " << imgpts2_good.size() << ")" << endl;
+	//		cout << "pts1 " << pts1.size() << " (orig pts " << imgpts1_good.size() << ")" << endl;
+	//		cout << "pts2 " << pts2.size() << " (orig pts " << imgpts2_good.size() << ")" << endl;
 #endif
 			Mat F = findFundamentalMat(pts1, pts2, FM_RANSAC, 0.1, 0.99,
 					status);
 		}
-		cout << "Fundamental mat is keeping " << countNonZero(status) << " / "
-				<< status.size() << endl;
+	//	cout << "Fundamental mat is keeping " << countNonZero(status) << " / "
+	//			<< status.size() << endl;
 
 		double status_nz = countNonZero(status);
 		double status_sz = status.size();
@@ -262,12 +262,12 @@ void MatchFeatures(const Mat& img_1, const Mat& img_1_orig, const Mat& img_2,
 					KeyPointsToPoints(imgpts1_very_good, pts1);
 					KeyPointsToPoints(imgpts2_very_good, pts2);
 #ifdef __SFM__DEBUG__
-					cout << "pts1 " << pts1.size() << endl;
-					cout << "pts2 " << pts2.size() << endl;
+	//				cout << "pts1 " << pts1.size() << endl;
+	//				cout << "pts2 " << pts2.size() << endl;
 #endif
 					T = estimateRigidTransform(pts1, pts2, false);
 #ifdef __SFM__DEBUG__
-					cout << "rigid transform from features " << endl << T << endl;
+	//				cout << "rigid transform from features " << endl << T << endl;
 #endif
 				}
 
@@ -306,9 +306,9 @@ void MatchFeatures(const Mat& img_1, const Mat& img_1_orig, const Mat& img_2,
 		img_1_orig.copyTo(outputflow);
 #endif		
 		double t = getTickCount();
-		cout << "Optical Flow...";
+	//	cout << "Optical Flow...";
 		if (use_dense_optflow) {
-			cout << "Dense...";
+	//		cout << "Dense...";
 			Mat_<Point2f> _flow, flow;
 			if (use_features_for_matching) 
 			{
@@ -388,7 +388,7 @@ void MatchFeatures(const Mat& img_1, const Mat& img_1_orig, const Mat& img_2,
 			}
 		}
 		t = ((double) getTickCount() - t) / getTickFrequency();
-		cout << "Done. (" << t << "s)" << endl;
+	//	cout << "Done. (" << t << "s)" << endl;
 #ifdef __SFM__DEBUG__
 		imshow("flow", outputflow);
 		waitKey(100);
