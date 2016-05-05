@@ -154,9 +154,7 @@ void* threadFunc1(void* thread)
 		{
 			cout << "  t->global_cam_id_to_local_id[t->pt3d_img] < 0" << endl;
 			cout << "local_cam_count = " << local_cam_count << endl;
-			cout << "Before impending doom" << endl;
 			cout << "local_cam_id_to_global_id[local_cam_count]" << t->local_cam_id_to_global_id[local_cam_count] << endl;
-			cout << "after doom" << endl;
 			//pthread_mutex_lock(&mtx);
 			//cout << "right before mtx" << endl;
 			//mtx.lock();
@@ -178,9 +176,11 @@ void* threadFunc1(void* thread)
 		Point2d pt2d_for_pt3d_in_img = 
 			t->imgpts[t->pt3d_img][t->pointcloud[t->pt3d].imgpt_for_img[t->pt3d_img]].pt;
 
+		cout << "Before impending doom" << endl;
 		t->imagePoints[local_cam_id][t->pt3d] = pt2d_for_pt3d_in_img;
 		cout << "assigned 2d pt" << endl;
 
+		cout << "after doom" << endl;
 		//visibility in this camera
 		t->visibility[local_cam_id][t->pt3d] = 1;
 		cout << "assigned visibility" << endl;
@@ -247,7 +247,7 @@ void* matMulThread(void* thread){
 }
 
 int create_matmul_threads(int numThreads, int num_global_cams, int point_cloud_size, int pmats_size, vector< vector<int> > visibility, 
-						vector<CloudPoint> pointcloud, map<int, cv::Matx34d> pmats, cv::Mat_<double> cam_matrix2)
+						vector<CloudPoint> pointcloud, map<int, cv::Matx34d> pmats, cv::Mat_<double> cam_matrix2,vector< vector<cv::KeyPoint> > imgpts2)
 {
 	int i,j,k;
 
@@ -286,6 +286,8 @@ int create_matmul_threads(int numThreads, int num_global_cams, int point_cloud_s
 			t[t_num].cam_matrix = cam_matrix2;
 			t[t_num].global_cam_id_to_local_id = vector<int>(num_global_cams,-1);
 			t[t_num].local_cam_id_to_global_id = vector<int>(pmats_size,-1);
+			t[t_num].imagePoints = vector<vector<Point2d>>(pmats_size, vector<Point2d>(point_cloud_size));
+			t[t_num].imgpts = imgpts2;
 			//cout << "cam_matrix = " << cam_matrix2 << endl;
 			t_copy++;
 
@@ -573,7 +575,7 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 	clock_t t1,t2;
 	t1=clock();
 	create_matmul_threads(num_global_cams*pointcloud.size(), num_global_cams,
-				pointcloud.size(), Pmats.size(), visibility, pointcloud, Pmats, cam_matrix);
+				pointcloud.size(), Pmats.size(), visibility, pointcloud, Pmats, cam_matrix, imgpts);
 	t2=clock();
 	float diff ((float)t2-(float)t1);
 	cout << "Total time of thread section: " << diff << endl;
