@@ -137,8 +137,10 @@ typedef struct
 //used to replace first for loop
 void* threadFunc1(void* thread) 
 {
+	mtx.lock();
 	cout << "Start of threadFunc1" << endl;
 	threadTuple *t = (threadTuple*) thread;
+	cout << "t->thread_num = " << t->thread_num << endl;
 	cout << "after converting to threadTuple" << endl;
 
 
@@ -146,7 +148,6 @@ void* threadFunc1(void* thread)
 	{
 		cout << "t->pointcloud[t->pt3d]).imgpt_for_img[t->pt3d_img] >= 0" << endl;
 		cout << "Before impending doom" << endl;
-		cout << "t->thread_num = " << t->thread_num << endl;
 		cout << "t->pt3d_img = " << t->pt3d_img << endl;
 		cout << "t->global_cam_id_to_local_id[t->pt3d_img] = " << t->global_cam_id_to_local_id[t->pt3d_img] << endl;
 		cout << "after doom" << endl;
@@ -154,13 +155,13 @@ void* threadFunc1(void* thread)
 		{
 			cout << "  t->global_cam_id_to_local_id[t->pt3d_img] < 0" << endl;
 			//pthread_mutex_lock(&mtx);
-			cout << "right before mtx" << endl;
-			mtx.lock();
+			//cout << "right before mtx" << endl;
+			//mtx.lock();
 			t->local_cam_id_to_global_id[local_cam_count] = t->pt3d_img;
 			t->global_cam_id_to_local_id[t->pt3d_img] = local_cam_count++;
 			//pthread_mutex_unlock(&mtx);
-			mtx.unlock();
-			cout << "after mtx" << endl;
+			//mtx.unlock();
+			//cout << "after mtx" << endl;
 		}
 		else
 		{
@@ -181,8 +182,14 @@ void* threadFunc1(void* thread)
 		t->visibility[local_cam_id][t->pt3d] = 1;
 		cout << "assigned visibility" << endl;
 	}
+	else
+	{
+
+	cout << "(t->pointcloud[t->pt3d]).imgpt_for_img[t->pt3d_img] < 0) (not if)" << endl;
+	}
 
 	cout << "end of function1" << endl;
+	mtx.unlock();
 }
 
 
@@ -237,7 +244,7 @@ void* matMulThread(void* thread){
 }
 
 int create_matmul_threads(int numThreads, int num_global_cams, int point_cloud_size, int pmats_size, vector< vector<int> > visibility, 
-						vector<CloudPoint> pointcloud, map<int, cv::Matx34d> pmats, cv::Mat_<double> cam_matrix2)
+						vector<CloudPoint> pointcloud, map<int, cv::Matx34d> pmats, cv::Mat_<double> cam_matrix2, vector<int> global_cam_id_to_local_id2)
 {
 	int i,j,k;
 
@@ -266,19 +273,16 @@ int create_matmul_threads(int numThreads, int num_global_cams, int point_cloud_s
 			t_num = i*num_global_cams + j;
 			t[t_num].thread_num = t_num;
 			t[t_num].pt3d = i;			//first loop
-			//cout << "Got here" << endl; 
+			//cout << "pt3d = " << i << endl;
 			t[t_num].pt3d_img = j;		//second loop
-			//cout << "And here" << endl;
+			//cout << "pt3d_img = " << j << endl; 
 			t[t_num].xPt_img = 0;	
-			//cout << "Here too" << endl;
 			t[t_num].visibility = visibility;
-			//cout << "too" << endl;
 			t[t_num].pointcloud = pointcloud;
-			//cout << "too 2" << endl;
 			t[t_num].Pmats = pmats;
-			//cout << "too 3" << endl;
 			t[t_num].cam_matrix = cam_matrix2;
-			//cout << "last one" << endl;
+			t[t_num].global_cam_id_to_local_id = global_cam_id_to_local_id2;
+			//cout << "cam_matrix = " << cam_matrix2 << endl;
 			t_copy++;
 
 			if(t_copy >=  1000){
@@ -558,14 +562,14 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 	int num_global_cams = pointcloud[0].imgpt_for_img.size();
 	vector<int> global_cam_id_to_local_id(num_global_cams, -1);
 	vector<int> local_cam_id_to_global_id(N, -1);
-	int local_cam_count = 0;
+//	int local_cam_count = 0;
 
 	//cout << "Start of thread test" << endl;
 
 	clock_t t1,t2;
 	t1=clock();
 	create_matmul_threads(num_global_cams*pointcloud.size(), num_global_cams,
-				pointcloud.size(), Pmats.size(), visibility, pointcloud, Pmats, cam_matrix);
+				pointcloud.size(), Pmats.size(), visibility, pointcloud, Pmats, cam_matrix,global_cam_id_to_local_id);
 	t2=clock();
 	float diff ((float)t2-(float)t1);
 	cout << "Total time of thread section: " << diff << endl;
