@@ -46,6 +46,7 @@ std::mutex mtx;
 int local_cam_count = 0;
 vector< vector<Point2d> > imagePoints;
 vector< vector<int> > visibility;
+vector<CloudPoint> pointcloud2;
 //vector<int> global_cam_id_to_local_id;
 
 #ifdef HAVE_SSBA
@@ -121,7 +122,7 @@ typedef struct
 
 	vector<int> local_cam_id_to_global_id;
 	vector<int> global_cam_id_to_local_id;
-    vector <CloudPoint> pointcloud;
+    //vector <CloudPoint> pointcloud;
 	//vector< vector<Point2d> > imagePoints;
 	vector< vector<cv::KeyPoint> > imgpts;
 
@@ -147,9 +148,9 @@ void* threadFunc1(void* thread)
 	cout << "after converting to threadTuple" << endl;
 
 
-	if ((t->pointcloud[t->pt3d]).imgpt_for_img[t->pt3d_img] >= 0)
+	if ((pointcloud2[t->pt3d]).imgpt_for_img[t->pt3d_img] >= 0)
 	{
-		cout << "t->pointcloud[t->pt3d]).imgpt_for_img[t->pt3d_img] >= 0" << endl;
+		cout << "pointcloud2[t->pt3d]).imgpt_for_img[t->pt3d_img] >= 0" << endl;
 		cout << "t->pt3d_img = " << t->pt3d_img << endl;
 		cout << "t->global_cam_id_to_local_id[t->pt3d_img] = " << t->global_cam_id_to_local_id[t->pt3d_img] << endl;
 		if (t->global_cam_id_to_local_id[t->pt3d_img] < 0)
@@ -177,7 +178,7 @@ void* threadFunc1(void* thread)
 
 		//2d point
 		Point2d pt2d_for_pt3d_in_img = 
-			t->imgpts[t->pt3d_img][t->pointcloud[t->pt3d].imgpt_for_img[t->pt3d_img]].pt;
+			t->imgpts[t->pt3d_img][pointcloud2[t->pt3d].imgpt_for_img[t->pt3d_img]].pt;
 
 		cout << "Before impending doom" << endl;
 		cout << "pt2d_for_pt3d_in_img.x = " << pt2d_for_pt3d_in_img.x << endl;
@@ -198,7 +199,7 @@ void* threadFunc1(void* thread)
 	else
 	{
 
-	cout << "(t->pointcloud[t->pt3d]).imgpt_for_img[t->pt3d_img] < 0) (not if)" << endl;
+	cout << "(pointcloud[t->pt3d]).imgpt_for_img[t->pt3d_img] < 0) (not if)" << endl;
 	}
 
 	cout << "end of function1" << endl;
@@ -210,7 +211,7 @@ void* threadFunc2(void* thread)
 {
 	threadTuple *t = (threadTuple*) thread;
 
-	if ((t->pointcloud[t->pt3d]).imgpt_for_img[t->pt3d_img] < 0)
+	if ((pointcloud2[t->pt3d]).imgpt_for_img[t->pt3d_img] < 0)
 	{
 		vector<int>::iterator local_it = find(t->local_cam_id_to_global_id.begin(),
 				t->local_cam_id_to_global_id.end(), t->pt3d_img);
@@ -222,8 +223,8 @@ void* threadFunc2(void* thread)
 			if (local_id >= 0)
 			{
 				Mat_<double> X = 
-					(Mat_<double>(4,1) << t->pointcloud[t->pt3d].pt.x, 
-					 t->pointcloud[t->pt3d].pt.y, t->pointcloud[t->pt3d].pt.z, 1);
+					(Mat_<double>(4,1) << pointcloud2[t->pt3d].pt.x, 
+					 pointcloud2[t->pt3d].pt.y, pointcloud2[t->pt3d].pt.z, 1);
 				Mat_<double> P(3, 4,t->Pmats[t->pt3d_img].val);
 				Mat_<double> KP = t->cam_matrix * P;
 				Mat_<double> xPt_img = KP * X;
@@ -256,8 +257,8 @@ void* matMulThread(void* thread){
 	t_finished++;
 }
 
-int create_matmul_threads(int numThreads, int num_global_cams, int point_cloud_size, int pmats_size, 
-						vector<CloudPoint> pointcloud, map<int, cv::Matx34d> pmats, cv::Mat_<double> cam_matrix2,vector< vector<cv::KeyPoint> > imgpts2, vector<int> global_cam_id_to_local_id, vector<int> local_cam_id_to_global_id)
+int create_matmul_threads(int numThreads, int num_global_cams, int point_cloud_size, int pmats_size,
+		map<int, cv::Matx34d> pmats, cv::Mat_<double> cam_matrix2,vector< vector<cv::KeyPoint> > imgpts2, vector<int> global_cam_id_to_local_id, vector<int> local_cam_id_to_global_id)
 {
 	int i,j,k;
 
@@ -291,7 +292,7 @@ int create_matmul_threads(int numThreads, int num_global_cams, int point_cloud_s
 			//cout << "pt3d_img = " << j << endl; 
 			t[t_num].xPt_img = 0;	
 			//t[t_num].visibility = visibility;
-			t[t_num].pointcloud = pointcloud;
+			//t[t_num].pointcloud = pointcloud;
 			t[t_num].Pmats = pmats;
 			t[t_num].cam_matrix = cam_matrix2;
 			//t[t_num].global_cam_id_to_local_id = vector<int>(num_global_cams,-1);
@@ -574,6 +575,7 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 	//vector < vector<Point2d> > imagePoints(N, vector < Point2d > (M)); // projections of 3d points for every camera
 	imagePoints.resize(N,vector <Point2d>(M));
 	visibility.resize(N, vector<int>(M)); // visibility of 3d points for every camera
+	pointcloud2 = pointcloud;
 	vector < Mat > cameraMatrix(N);	// intrinsic matrices of all cameras (input and output)
 	vector < Mat > R(N);// rotation matrices of all cameras (input and output)
 	vector < Mat > T(N);// translation vector of all cameras (input and output)
@@ -589,7 +591,7 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 	clock_t t1,t2;
 	t1=clock();
 	create_matmul_threads(num_global_cams*pointcloud.size(), num_global_cams,
-				pointcloud.size(), Pmats.size(), pointcloud, Pmats, cam_matrix, imgpts, global_cam_id_to_local_id,
+				pointcloud.size(), Pmats.size(), Pmats, cam_matrix, imgpts, global_cam_id_to_local_id,
 				local_cam_id_to_global_id);
 	t2=clock();
 	float diff ((float)t2-(float)t1);
