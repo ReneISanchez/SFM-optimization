@@ -102,8 +102,6 @@ int main(int argc, char** argv)
         return 0;
     }
 
-	//cerr << "Hello world!" << endl;
-	//exit(1);
 
    // double downscale_factor = 1.0;
 /*    if (argc >= 5) 
