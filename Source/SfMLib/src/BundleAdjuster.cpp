@@ -299,7 +299,7 @@ int create_matmul_threads(int numThreads, int num_global_cams, int point_cloud_s
 	cout << std::flush << endl;
 
 	//Initialize threads tuples  
-	int t_num = 0;
+	int t_num = 1;
 	int t_copy = 0;
 	int prev = 0;
 	//Initialize global variables
@@ -329,11 +329,15 @@ int create_matmul_threads(int numThreads, int num_global_cams, int point_cloud_s
 
 			if(t_copy >=  10){
 				cout << "Right before thread creation" << endl;
-				for(k = prev; k < t_num; k++){
-					cout << "Inside of thread creation loop. k = " << k << ", t_num = " << t_num << endl;
+				for(k = prev; k <= t_num; k++){
+	//				cout << "Inside of thread creation loop. k = " << k << ", t_num = " << t_num << endl;
 					pthread_create(&threads[k], NULL, matMulThread, (void*) &t[k]);
 				}
-				while(t_finished < t_num);
+				while(t_finished < t_num)
+				{
+				//	cout << "In while loop: " << t_finished << "/" << t_num << endl;
+				}
+				cout << "!!!!!OUT OF WHILE LOOP!!!!!" << endl;
 				prev = t_num + 1;
 				t_copy = 0;
 				cout << "Finished thread batch" << endl;
