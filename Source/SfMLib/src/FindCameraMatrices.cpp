@@ -55,17 +55,17 @@ void DecomposeEssentialUsingHorn90(double _E[9], double _R1[9], double _R2[9], d
 	using namespace Eigen;
 
 	Matrix3d E = Map<Matrix<double,3,3,RowMajor> >(_E);
-	cout << "+1 simple mat creation"  << endl;
+	//cout << "+1 simple mat creation"  << endl;
 	Matrix3d EEt = E * E.transpose();
-	cout << "+1 mat mul" << endl;
+	//cout << "+1 mat mul" << endl;
 	Vector3d e0e1 = E.col(0).cross(E.col(1)),e1e2 = E.col(1).cross(E.col(2)),e2e0 = E.col(2).cross(E.col(0));
 	Vector3d b1,b2;
 
 #if 1
 	//Method 1
 	Matrix3d bbt = 0.5 * EEt.trace() * Matrix3d::Identity() - EEt; //Horn90 (12)
-	cout << "+1 mat mul" << endl;
-	cout << "+1 simple mat creation" << endl;
+	//cout << "+1 mat mul" << endl;
+	//cout << "+1 simple mat creation" << endl;
 	Vector3d bbt_diag = bbt.diagonal();
 	if (bbt_diag(0) > bbt_diag(1) && bbt_diag(0) > bbt_diag(2)) 
 	{
@@ -118,7 +118,7 @@ void DecomposeEssentialUsingHorn90(double _E[9], double _R1[9], double _R2[9], d
 	//Horn90 (24)
 	R1 = (cofactors.transpose() - B1*E) / b1.dot(b1);
 	R2 = (cofactors.transpose() - B2*E) / b2.dot(b2);
-	cout << "+2 mat mul" << endl;
+	//cout << "+2 mat mul" << endl;
 	Map<Vector3d> t1(_t1),t2(_t2); 
 	t1 = b1; t2 = b2;
 	
@@ -315,7 +315,7 @@ bool TestTriangulation(const vector<CloudPoint>& pcloud, const Matx34d& P, vecto
 	vector<Point3d> pcloud_pt3d_projected(pcloud_pt3d.size());
 	
 	Matx44d P4x4 = Matx44d::eye();
-	cout << "+1 simple mat creation" << endl;
+	//cout << "+1 simple mat creation" << endl;
 	for (int i = 0; i < 12; i++) P4x4.val[i] = P.val[i];
 	
 	perspectiveTransform(pcloud_pt3d, pcloud_pt3d_projected, P4x4);
@@ -338,7 +338,7 @@ bool TestTriangulation(const vector<CloudPoint>& pcloud, const Matx34d& P, vecto
 	if (false) //not
 	{
 		cv::Mat_<double> cldm(pcloud.size(),3);
-		cout << "+2 simple mat creation" << endl;
+		//cout << "+2 simple mat creation" << endl;
 		for (unsigned int i = 0; i < pcloud.size(); i++) 
 		{
 			cldm.row(i)(0) = pcloud[i].pt.x;
@@ -404,7 +404,7 @@ bool DecomposeEtoRandT(
 	Matx33d Wt(	0,1,0,
 				-1,0,0,
 				0,0,1);
-	cout << "+2 simple 3x3 matrix" << endl;
+	//cout << "+2 simple 3x3 matrix" << endl;
 
 	R1 = svd_u * Mat(W) * svd_vt; //HZ 9.19
 	R2 = svd_u * Mat(Wt) * svd_vt; //HZ 9.19
@@ -452,7 +452,7 @@ bool FindCameraMatrices(const Mat& K,
 		
 		// Essential matrix: compute then extract cameras [R|t]
 		Mat_<double> E = K.t() * F * K; //according to HZ (9.12)
-		cout << "+2 mat mul" << endl;
+		//cout << "+2 mat mul" << endl;
 
 		// According to http://en.wikipedia.org/wiki/Essential_matrix#Properties_of_the_essential_matrix
 		if (fabsf(determinant(E)) > 1e-04) // 1e-07
@@ -492,7 +492,7 @@ bool FindCameraMatrices(const Mat& K,
 			P1 = Matx34d(R1(0,0),	R1(0,1),	R1(0,2),	t1(0),
 						 R1(1,0),	R1(1,1),	R1(1,2),	t1(1),
 						 R1(2,0),	R1(2,1),	R1(2,2),	t1(2));
-			cout << "+1 simple matrix" << endl;
+			//cout << "+1 simple matrix" << endl;
 			//cout << "Testing P1 " << endl << Mat(P1) << endl;
 			
 			vector<CloudPoint> pcloud,pcloud1; vector<KeyPoint> corresp;
@@ -505,7 +505,8 @@ bool FindCameraMatrices(const Mat& K,
 				P1 = Matx34d(R1(0,0),	R1(0,1),	R1(0,2),	t2(0),
 							 R1(1,0),	R1(1,1),	R1(1,2),	t2(1),
 							 R1(2,0),	R1(2,1),	R1(2,2),	t2(2));
-				cout << "+1 simple matrix" << endl;
+				//cout << "+1 simple matrix" << endl;
+				//
 				//cout << "Testing P1 "<< endl << Mat(P1) << endl;
 
 				pcloud.clear(); pcloud1.clear(); corresp.clear();
@@ -524,7 +525,7 @@ bool FindCameraMatrices(const Mat& K,
 					P1 = Matx34d(R2(0,0),	R2(0,1),	R2(0,2),	t1(0),
 								 R2(1,0),	R2(1,1),	R2(1,2),	t1(1),
 								 R2(2,0),	R2(2,1),	R2(2,2),	t1(2));
-					cout << "+1 simple matrix" << endl;
+					//cout << "+1 simple matrix" << endl;
 					//cout << "Testing P1 "<< endl << Mat(P1) << endl;
 
 					pcloud.clear(); pcloud1.clear(); corresp.clear();

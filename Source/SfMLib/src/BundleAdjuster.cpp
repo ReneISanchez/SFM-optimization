@@ -33,8 +33,11 @@
 #include <mutex>
 #include <unistd.h>
 #include <time.h>
+#include <fstream>
 #include <chrono>
+#include <arrayfire.h>
 
+using namespace af;
 using namespace cv;
 using namespace std;
 
@@ -43,6 +46,8 @@ using namespace std;
 #endif
 
 std::mutex mtx;
+std::mutex mtx3;
+std::mutex mtx2;
 //int local_cam_count = 0;
 vector< vector<Point2d> > imagePoints;
 vector< vector<int> > visibility;
@@ -114,257 +119,185 @@ namespace
 /********************************************************************/
 /**********************  ALL THREAD STUFF GOES HERE *****************/
 /********************************************************************/
+
+//Struct that we pass in to threadFunc1 and threadFunc2. Contains copies of the parameters that are specific to each 
+//unrolled for loop of the bundle adjustment initialization process.
 typedef struct 
 {
 	int thread_num;
 
-	int pt3d_img;
-	int pt3d;
-
-	//Mat_<double> xPt_img; //What is gonna get updated
-	//vector< vector<int> > visibility;
-
-	//vector<int> local_cam_id_to_global_id;
-	//vector<int> global_cam_id_to_local_id;
-    //vector <CloudPoint> pointcloud;
-	//vector< vector<Point2d> > imagePoints;
-	//vector< vector<cv::KeyPoint> > imgpts;
-
-	//map<int,cv::Matx34d> Pmats;
-	//cv::Mat_<double> cam_matrix;
+	int pt3d_img;  //inner loop
+	int pt3d;      //outer loop
 } threadTuple;
 
-//TODO
-//All threads created in the above function will run this thread, and die after they are done
-// executing it. The threadTuple values changed in this thread will be saved.
-
-//TODO two different functions for each inner for loop
-//TODO change parameters of functions to include what gettting compiler errors for
-
-
-//used to replace first for loop
+//Used to replace 1st inner for-loop of what used to be the Bundle Adjustment initialization
+//This functions is executed in parallel on the CPU.
 void* threadFunc1(void* thread) 
 {
-	mtx.lock();
 	int local_cam_count = 0;
-	cout << "Start of threadFunc1" << endl;
-	threadTuple *t = (threadTuple*) thread;
-	cout << "t->thread_num = " << t->thread_num << endl;
-	cout << "after converting to threadTuple" << endl;
+	threadTuple *t = (threadTuple*) thread;  //get the struct with the specific parameters for this loop
 
 
 	if ((pointcloud2[t->pt3d]).imgpt_for_img[t->pt3d_img] >= 0)
 	{
-		cout << "pointcloud2[t->pt3d]).imgpt_for_img[t->pt3d_img] >= 0" << endl;
-		cout << "t->pt3d_img = " << t->pt3d_img << endl;
-		cout << "global_cam_id_to_local_id[t->pt3d_img] = " << global_cam_id_to_local_id[t->pt3d_img] << endl;
-		if (global_cam_id_to_local_id[t->pt3d_img] < 0)
+	    if (global_cam_id_to_local_id[t->pt3d_img] < 0)
 		{
-			cout << "  global_cam_id_to_local_id[t->pt3d_img] < 0" << endl;
-			cout << "local_cam_count = " << local_cam_count << endl;
-			cout << "local_cam_id_to_global_id[local_cam_count] = " << local_cam_id_to_global_id[local_cam_count] << endl;
-			//pthread_mutex_lock(&mtx);
-			//cout << "right before mtx" << endl;
-			//mtx.lock();
+		 	mtx.lock();		//mutual exclusion lock. Only allow 1 thread to execute the following code
 			local_cam_id_to_global_id[local_cam_count] = t->pt3d_img;
-			local_cam_count++;
-			global_cam_id_to_local_id[t->pt3d_img] = local_cam_count;
-			//pthread_mutex_unlock(&mtx);
-			//mtx.unlock();
-			//cout << "after mtx" << endl;
+			global_cam_id_to_local_id[t->pt3d_img] = local_cam_count++;
+			mtx.unlock();	//mutual exclusion unlock
 		}
-		else
-		{
-			cout << "  global_cam_id_to_local_id[t->pt3d_img] >= 0  (not if)" << endl;
-		}
-		
+
 		int local_cam_id = global_cam_id_to_local_id[t->pt3d_img];
-		cout << "local_cam_id: " << local_cam_id << endl;
 
 		//2d point
 		Point2d pt2d_for_pt3d_in_img = 
 			imgpts2[t->pt3d_img][pointcloud2[t->pt3d].imgpt_for_img[t->pt3d_img]].pt;
 
-		cout << "pt2d_for_pt3d_in_img.x = " << pt2d_for_pt3d_in_img.x << endl;
-		cout << "pt2d_for_pt3d_in_img.y = " << pt2d_for_pt3d_in_img.y << endl;
-	
-		cout << "local_cam_id: " << local_cam_id << endl;
-		cout << "pt3d: " << t->pt3d << endl;
-
-		imagePoints[1][t->pt3d] = pt2d_for_pt3d_in_img;
-		cout << "imagePoints.size(): " << imagePoints.size() << endl;
-		cout << "imagePoints[local_cam_id][pt->pt3d].x: " << imagePoints[local_cam_id][t->pt3d].x << endl;
-		cout << "imagePoints[local_cam_id][pt->pt3d].y: " << imagePoints[local_cam_id][t->pt3d].y << endl;
-		//t->imagePoints[local_cam_id + 1][t->pt3d] = pt2d_for_pt3d_in_img;
-
-		//visibility in this camera
+		imagePoints[local_cam_id][t->pt3d] = pt2d_for_pt3d_in_img;
 		visibility[local_cam_id][t->pt3d] = 1;
-		cout << "assigned visibility" << endl;
-	}
-	else
-	{
 
-	cout << "(pointcloud[t->pt3d]).imgpt_for_img[t->pt3d_img] < 0) (not if)" << endl;
 	}
-
-	cout << "end of function1" << endl;
-	mtx.unlock();
 }
 
-
+//Used to to replace 2nd inner for-loop of what used to be the Bundle Adjustment initialization.
+//This function is executed in parallel on the CPU, and it will also spawn GPU threads for matrix
+//multiplication through the use of Arrayfire.
 void* threadFunc2(void* thread)
 {
-	mtx.lock();
-	cout << "Start of threadFunc1" << endl;
-	threadTuple *t = (threadTuple*) thread;
-	cout << "After converting to threadTuple" << endl;
 
-	cout << "(pointcloud2[t->pt3d]).imgpt_for_img[t->pt3d_img] = " << (pointcloud2[t->pt3d]).imgpt_for_img[t->pt3d_img] << endl;
+	threadTuple *t = (threadTuple*) thread;
+
 	if ((pointcloud2[t->pt3d]).imgpt_for_img[t->pt3d_img] < 0)
 	{
-		cout << "Twas < 0" << endl;
 		vector<int>::iterator local_it = find(local_cam_id_to_global_id.begin(),
 				local_cam_id_to_global_id.end(), t->pt3d_img);
-		cout << "Initialized iterator" << endl;
 
 		if(local_it != local_cam_id_to_global_id.end())
 		{
-			cout << "Not at end" << endl;
 			int local_id = local_it - local_cam_id_to_global_id.begin();
-			cout << "local_id = " << local_id << endl;
 
 			if (local_id >= 0)
 			{
-				cout << "Twas >=0" << endl;
-				Mat_<double> X = 
-					(Mat_<double>(4,1) << pointcloud2[t->pt3d].pt.x, 
-					 pointcloud2[t->pt3d].pt.y, pointcloud2[t->pt3d].pt.z, 1);
-				Mat_<double> P(3, 4,Pmats2[t->pt3d_img].val);
-				Mat_<double> KP = cam_matrix2 * P;
-				Mat_<double> xPt_img = KP * X;
-				cout << "Matrix stuff" << endl;
 
-				Point2d xPt_img_(xPt_img(0) / xPt_img(2), 
-						xPt_img(1) / xPt_img(2));
-				cout << "xPt_img_.x = " << xPt_img_.x << endl;
-				cout << "xPt_img_.y = " << xPt_img_.y << endl;
+				//Create a float array of the pointcloud so that we can create an Arrayfire array so we can feed it to Arrayfire as a matmul parameter
+				float X_ptr[] = {(float)pointcloud2[t->pt3d].pt.x, (float)pointcloud2[t->pt3d].pt.y, (float) pointcloud2[t->pt3d].pt.z,1.0};
+				af::array X(4,1, X_ptr);
 
-				cout << "t->pt3d = " << t->pt3d << endl;
-				imagePoints[1][t->pt3d] = xPt_img_;
+				//Create a float array of the pmat so that we can create an Arrayfire array so we can feed it to Arrayfire as a matmul parameter	
+				float P_ptr[] = {Pmats2[t->pt3d_img](0,0), Pmats2[t->pt3d_img](0,1), Pmats2[t->pt3d_img](0,2), 
+					Pmats2[t->pt3d_img](0,3), Pmats2[t->pt3d_img](0,4), Pmats2[t->pt3d_img](1,0), Pmats2[t->pt3d_img](1,1),
+					Pmats2[t->pt3d_img](1,2), Pmats2[t->pt3d_img](1,3), Pmats2[t->pt3d_img](1,4), Pmats2[t->pt3d_img](2,0),
+					Pmats2[t->pt3d_img](2,1), Pmats2[t->pt3d_img](2,2), Pmats2[t->pt3d_img](2,3), Pmats2[t->pt3d_img](2,4),
+					Pmats2[t->pt3d_img](3,0), Pmats2[t->pt3d_img](3,1), Pmats2[t->pt3d_img](3,2), Pmats2[t->pt3d_img](3,3),
+					Pmats2[t->pt3d_img](3,4)};
+				af::array P(3,4,P_ptr);
+
+				//Same as above ^^
+				float cam_ptr[] = {(float) cam_matrix2(0,0),(float) cam_matrix2(0,1),(float) cam_matrix2(0,2),
+									(float) cam_matrix2(1,0),(float) cam_matrix2(1,1),(float) cam_matrix2(1,2)};			
+				af::array cam(1, 2, cam_ptr);
+	
+				//Arrayfire matrix multiplications
+				af::array KP = matmul(cam, P);
+				af::array xPt_img = matmul(KP,X);
+
+				//Now we need to extract the data from the GPU (GPU -> CPU)
+				//Create a float array
+				float *host_a = new float[4];
+
+				//Have the resulting matrix have its data sent over
+				xPt_img.host(host_a);
+
+				Point2d xPt_img_(host_a[0] / host_a[2], 
+						host_a[1] / host_a[2]);
+
+				imagePoints[local_id][t->pt3d] = xPt_img_;
 
 				visibility[local_id][t->pt3d] = 0;
-				cout << "Set visibility" << endl;
+    			cout << "Set visibility" << endl;
+				delete[] host_a; //free up
 			}
 		}
 	}
-/*
-	cout << "t.thread_num: " << t->thread_num << endl;
-	cout << "t.pt3d: " << t->pt3d << endl;
-	cout << "t.pt3d_img: " << t->pt3d_img << endl;
-	cout << "t.xPt_img: " << t->xPt_img << endl;
-	cout << "t.vis: " << t->visibility[0][0][0] << endl;
-	cout << endl;
-*/
-	cout << "End of threadFunc2" << endl;
-	mtx.unlock();
+
 }
 
+//Global bool used for knowing when all threads have finished executing
 int t_finished = 0;
 
-
+//Function that executes the two threadFuncs sequentially.
 void* matMulThread(void* thread){
+
 	threadFunc1(thread);
 	threadFunc2(thread);
+
 	t_finished++;
-	cout << "matMulThread is done. t_finished = " << t_finished << endl;
 }
 
+//
 int create_matmul_threads(int numThreads, int num_global_cams, int point_cloud_size)
 {
 	int i,j,k;
 
-	cout << "numThreads: " << numThreads << endl;
-
 	//Create the thread identifiers
 	pthread_t threads[numThreads];
 
-	cout << "Created pthreads" << endl;
-	cout << std::flush << endl;
-
 	//Create the thread tuples that will be passed into the thread function
-	cout << "Right before struct array" << endl;
 	threadTuple* t = new threadTuple[numThreads];
-
-	cout << "Created struct array" << endl;
-	cout << std::flush << endl;
 
 	//Initialize threads tuples  
 	int t_num = 1;
 	int t_copy = 0;
 	int prev = 0;
+	int old_num = -1;
+	
 	//Initialize global variables
 	for(i = 0; i < point_cloud_size; i++){
 		for(j = 0; j < num_global_cams; j++){
-			//cout << "thread_num: " << i*num_global_cams + j << endl;
 			t_num = i*num_global_cams + j;
+			old_num = t_num;
 			t[t_num].thread_num = t_num;
 			t[t_num].pt3d = i;			//first loop
-			//cout << "pt3d = " << i << endl;
 			t[t_num].pt3d_img = j;		//second loop
-			//cout << "pt3d_img = " << j << endl; 
-			//t[t_num].xPt_img = 0;	
-			//t[t_num].visibility = visibility;
-			//t[t_num].pointcloud = pointcloud;
-			//t[t_num].Pmats = pmats;
-			//t[t_num].cam_matrix = cam_matrix2;
-			//t[t_num].global_cam_id_to_local_id = vector<int>(num_global_cams,-1);
-			//t[t_num].local_cam_id_to_global_id = vector<int>(pmats_size,-1);
-			//t[t_num].global_cam_id_to_local_id = global_cam_id_to_local_id;
-			//t[t_num].local_cam_id_to_global_id = local_cam_id_to_global_id;
-			//t[t_num].imagePoints = vector<vector<Point2d>>(pmats_size, vector<Point2d>(point_cloud_size));
-			//t[t_num].imagePoints = imagePoints;
-			//t[t_num].imgpts = imgpts2;
-			//cout << "cam_matrix = " << cam_matrix2 << endl;
-			t_copy++;
 
-			if(t_copy >=  10){
-				cout << "Right before thread creation" << endl;
+			t_copy++;	
+
+			//Execute the threads in batches of 1000, in order to not get killed by the OS
+			if(t_copy >  999){
 				for(k = prev; k <= t_num; k++){
-	//				cout << "Inside of thread creation loop. k = " << k << ", t_num = " << t_num << endl;
+					//Create a thread. Thread will execute matMulThread with t[k] as parameter
 					pthread_create(&threads[k], NULL, matMulThread, (void*) &t[k]);
 				}
+
 				while(t_finished < t_num)
 				{
-				//	cout << "In while loop: " << t_finished << "/" << t_num << endl;
-				}
-				cout << "!!!!!OUT OF WHILE LOOP!!!!!" << endl;
-				prev = t_num + 1;
+				//sleep(1);
+				//cout << "In while loop: " << t_finished << "/" << t_num << endl;
+				} 
+		
+				prev = t_num;
 				t_copy = 0;
-				cout << "Finished thread batch" << endl;
+//				cout << "Finished thread batch" << endl;
 			}
+		
+		}
+	}
+	
+
+	//Run any remaining threads
+	if(t_copy > 0){
+//		cout << "Last thread creation" << endl;
+		for( k = prev; k < t_num; k++){
+			pthread_create(&threads[k], NULL, matMulThread, (void*) &t[k]);
 		}
 	
 	}
 
-	//Run any remaining threads
-	if(t_copy > 0){
-		cout << "Last thread creation" << endl;
-		for( k = prev; k < t_num; k++){
-			pthread_create(&threads[k], NULL, matMulThread, (void*) &t[k]);
-		}
-		while(t_finished < t_num);
-	}
-
-/*
-	//Launch the threads. 
-	//Note: Might be worth executing this in parallel on the CPU
-	for(i = 0; i < point_cloud_size*num_global_cams; i++){
-		pthread_create(&threads[i], NULL, matMulThread, (void*) &t[i]);
-	}
-
-*/
 	//Wait until all threads are finished
-	while(t_finished < numThreads);
+	while(t_finished < point_cloud_size*num_global_cams){
+		sleep(1);
+	}
 
 	return 0;
 }
@@ -394,7 +327,7 @@ int BundleAdjuster::Count2DMeasurements(const vector<CloudPoint>& pointcloud)
 }
 
 void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
-		Mat& cam_matrix, const vector<vector<cv::KeyPoint> >& imgpts,
+		Mat& cam_matrix, vector<vector<cv::KeyPoint> >& imgpts,
 		map<int, cv::Matx34d>& Pmats) 
 {
 	int N = Pmats.size(), M = pointcloud.size(), K = Count2DMeasurements(pointcloud);
@@ -412,7 +345,7 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 	//conver camera intrinsics to BA datastructs
 	Matrix3x3d KMat;
 	makeIdentityMatrix(KMat);
-	cout << "+1 simple mat declaration" << endl;
+	//cout << "+1 simple mat declaration" << endl;
 	KMat[0][0] = cam_matrix.at<double>(0,0);//fx
 	KMat[1][1] = cam_matrix.at<double>(1,1);//fy
 	KMat[0][1] = cam_matrix.at<double>(0,1);//skew
@@ -598,40 +531,39 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 	/*	Use OpenCV contrib module for sparse bundle adjustment						*/
 	/********************************************************************************/
 
+
 	vector < Point3d > points(M);// positions of points in global coordinate system (input and output)
-	//vector < vector<Point2d> > imagePoints(N, vector < Point2d > (M)); // projections of 3d points for every camera
-//	imagePoints.resize(N,vector <Point2d>(M));
+   
+	// projections of 3d points for every camera
 	imagePoints = vector<vector<Point2d>>(N, vector<Point2d>(M));
-//	visibility.resize(N, vector<int>(M)); // visibility of 3d points for every camera
+
+	// visibility of 3d points for every camera
 	visibility = vector< vector<int> >(N, vector<int>(M));
+
+	//We use a copy so that we don't modify the original
 	pointcloud2 = pointcloud;
-	vector < Mat > cameraMatrix(N);	// intrinsic matrices of all cameras (input and output)
+
+	vector < Mat > cameraMatrix(N);// intrinsic matrices of all cameras (input and output)
 	vector < Mat > R(N);// rotation matrices of all cameras (input and output)
 	vector < Mat > T(N);// translation vector of all cameras (input and output)
 	vector < Mat > distCoeffs(0);// distortion coefficients of all cameras (input and output)
 
 	int num_global_cams = pointcloud[0].imgpt_for_img.size();
-//	global_cam_id_to_local_id.resize(num_global_cams, -1);
-//	local_cam_id_to_global_id.resize(N, -1);
+
 	global_cam_id_to_local_id = vector<int>(num_global_cams,-1);
 	local_cam_id_to_global_id = vector<int>(N,-1);
+
+	//Use copies so that we don't modify the originals
 	Pmats2 = Pmats;
 	imgpts2 = imgpts;
 	cam_matrix2 = cam_matrix;
-//	int local_cam_count = 0;
 
 	int total_t = num_global_cams*pointcloud.size();
-	//cout << "Start of thread test" << endl;
 
-	clock_t t1,t2;
-	t1=clock();
+
 	create_matmul_threads(total_t, num_global_cams, pointcloud.size());
-	t2=clock();
-	float diff ((float)t2-(float)t1);
-	cout << "Total time of thread section: " << diff << endl;
-	//cout << "End of thread test" << endl;
-	exit(1);
 
+	//The big double for-loop that we replaced with this^ function 
 /*
 	for (unsigned int pt3d = 0; pt3d < pointcloud.size(); pt3d++) 
 	{
@@ -706,13 +638,17 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 		}
 	}
 */
-	cout << "+" << 2*num_global_cams*2 << " 3x3 matrix muls" << endl;
+	//cout << "+" << 2*num_global_cams*2 << " 3x3 matrix muls" << endl;
 
 	for (int i = 0; i < N; i++) 
 	{
-		cameraMatrix[i] = cam_matrix;
+		//printf("i/N: %d/%d",i,N);
+		cameraMatrix[i] = cam_matrix2;
+		//cout << "cameraMatrix[i] = " << cam_matrix2 << endl;
 
-		Matx34d& P = Pmats[local_cam_id_to_global_id[i]];
+		Matx34d& P = Pmats2[local_cam_id_to_global_id[i]];
+		//cout << "local_cam_id_to_global_id[i] = " << local_cam_id_to_global_id[i] << endl;
+		//cout << "Pmats = " << Pmats2[local_cam_id_to_global_id[i]] << endl;
 
 		Mat_<double> camR(3, 3), camT(3, 1);
 		camR(0, 0) = P(0, 0);
@@ -728,19 +664,21 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 		camR(2, 2) = P(2, 2);
 		camT(2) = P(2, 3);
 		R[i] = camR;
+		//cout << "R[i] = " << R[i] << endl;
 		T[i] = camT;
+		//cout << "T[i] = " << T[i] << endl;
 
 	}
 
 	//cout << "Adjust bundle... \n";
 	cv::LevMarqSparse::bundleAdjust(points, imagePoints, visibility,
 			cameraMatrix, R, T, distCoeffs);
-	cout << "DONE\n";
+	//cout << "DONE\n";
 
 	//get the BAed points
-	for (unsigned int pt3d = 0; pt3d < pointcloud.size(); pt3d++) 
+	for (unsigned int pt3d = 0; pt3d < pointcloud2.size(); pt3d++) 
 	{
-		pointcloud[pt3d].pt = points[pt3d];
+		pointcloud2[pt3d].pt = points[pt3d];
 	}
 
 	//get the BAed cameras
@@ -762,8 +700,11 @@ void BundleAdjuster::adjustBundle(vector<CloudPoint>& pointcloud,
 		P(2, 2) = R[i].at<double>(2, 2);
 		P(2, 3) = T[i].at<double>(2);
 
-		Pmats[local_cam_id_to_global_id[i]] = P;
+		Pmats2[local_cam_id_to_global_id[i]] = P;
 	}
+	Pmats = Pmats2;
+	cam_matrix = cam_matrix2;
+	pointcloud = pointcloud2;
 
 #endif
 }

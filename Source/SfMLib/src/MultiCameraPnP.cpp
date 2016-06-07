@@ -27,6 +27,7 @@
  *
  */
 #define USE_PROFILING
+#include <time.h>
 
 #include "RichFeatureMatcher.h"
 #include "OFFeatureMatcher.h"
@@ -105,7 +106,7 @@ void MultiCameraPnP::GetBaseLineTriangulation()
 	cv::Matx34d P1(1,0,0,0,
 			       0,1,0,0,
 			       0,0,1,0);
-	cout << "+2 simple matrix creation" << endl;	
+	//cout << "+2 simple matrix creation" << endl;	
 	vector<CloudPoint> tmp_pcloud;
 	
 	// Sort pairwise matches to find the lowest Homography inliers [Snavely07 4.2]
@@ -345,7 +346,7 @@ bool MultiCameraPnP::TriangulatePointsBetweenViews(
 	// TODO potential bug - the P mat for <view> may not exist? or does it...
 	cv::Matx34d P = Pmats[older_view];
 	cv::Matx34d P1 = Pmats[working_view];
-	cout << "+2 simple matrix creation" << endl;
+	//cout << "+2 simple matrix creation" << endl;
 
 	vector<cv::KeyPoint> pt_set1,pt_set2;
 	vector<cv::DMatch> matches = matches_matrix[make_pair(older_view,working_view)];
@@ -501,9 +502,13 @@ void MultiCameraPnP::AdjustCurrentBundle()
 	GetRGBForPointCloud(pointcloud_beforeBA, pointCloudRGB_beforeBA);
 	
 	cv::Mat _cam_matrix = K;
-	cout << "+1 simple matrix creation" << endl;
+	//cout << "+1 simple matrix creation" << endl;
 	BundleAdjuster BA;
+	clock_t timer = clock();
 	BA.adjustBundle(pcloud,_cam_matrix,imgpts,Pmats);
+	timer = clock() - timer;
+	cout << ((float)timer)/CLOCKS_PER_SEC << endl;
+	cout << "END BUNDLE ADJUSTMENT" << endl;
 	K = cam_matrix;
 	Kinv = K.inv();
 	
@@ -571,7 +576,7 @@ void MultiCameraPnP::RecoverDepthFromImages()
 						  P1(1,0), P1(1,1), P1(1,2),
 						  P1(2,0), P1(2,1), P1(2,2));
 	cv::Mat_<double> rvec(1,3); 
-	cout << "+4 simple matrix creation" << endl;
+	//cout << "+4 simple matrix creation" << endl;
     Rodrigues(R, rvec);
 	
 	done_views.clear(); 
@@ -630,7 +635,7 @@ void MultiCameraPnP::RecoverDepthFromImages()
 								 R(1,0),R(1,1),R(1,2),t(1),
 								 R(2,0),R(2,1),R(2,2),t(2));
 		
-		cout << "+1 simple matrix creation" << endl;
+		//cout << "+1 simple matrix creation" << endl;
 
 		// Start triangulating with previous GOOD views
 		for (set<int>::iterator done_view = good_views.begin(); done_view != good_views.end(); ++done_view)
@@ -744,7 +749,7 @@ void MultiCameraPnP::init(const string& imgs_path_)
 					  0,       max_w_h, imgs_size.height / 2.0,
 					  0,       0,       1);
 		distortion_coeff = cv::Mat_<double>::zeros(1, 4);
-		cout << "+1 image matrix created" << endl;
+		//cout << "+1 image matrix created" << endl;
 	}
 
 	K = cam_matrix;

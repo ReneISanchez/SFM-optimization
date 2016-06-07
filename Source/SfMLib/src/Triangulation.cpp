@@ -75,7 +75,7 @@ Mat_<double> LinearLSTriangulation(Point3d u,		//homogenous image point (u,v,1)
 			  -(u1.x*P1(2,3)	-P1(0,3)),
 			  -(u1.y*P1(2,3)	-P1(1,3)));
 
-	cout << "+2 simple matrix creation" << endl;
+	//cout << "+2 simple matrix creation" << endl;
 	Mat_<double> X;
 	solve(A,B,X,DECOMP_SVD);
 	
@@ -95,7 +95,7 @@ Mat_<double> IterativeLinearLSTriangulation(Point3d u,	//homogenous image point 
 {
 	double wi = 1, wi1 = 1;
 	Mat_<double> X(4,1);
-	cout << "+1 simple matrix creation" << endl;
+	//cout << "+1 simple matrix creation" << endl;
 	Mat_<double> X_ = LinearLSTriangulation(u,P,u1,P1);
 	X(0) = X_(0); X(1) = X_(1); X(2) = X_(2); X(3) = 1.0;
 	
@@ -129,7 +129,7 @@ Mat_<double> IterativeLinearLSTriangulation(Point3d u,	//homogenous image point 
 		solve(A,B,X_,DECOMP_SVD);
 		X(0) = X_(0); X(1) = X_(1); X(2) = X_(2); X(3) = 1.0;
 	}
-	cout << "+20 simple matrix creation" << endl;
+	//cout << "+20 simple matrix creation" << endl;
 	return X;
 }
 
@@ -157,7 +157,7 @@ double TriangulatePoints(const vector<KeyPoint>& pt_set1,
 				0,		0,		0,		1);
 	Matx44d P1inv(P1_.inv());
 	
-	cout << "+1 simple matrix creation" << endl;
+	//cout << "+1 simple matrix creation" << endl;
 	double t = getTickCount();
 	vector<double> reproj_error;
 	unsigned int pts_size = pt_set1.size();
@@ -204,7 +204,7 @@ double TriangulatePoints(const vector<KeyPoint>& pt_set1,
 	cout << "P1 rows: " << Mat(P1).rows << endl;
 	cout << "P1 cols: " << Mat(P1).cols << endl; */
 
-	cout << "+1 3x3 mat mul" << endl;
+	//cout << "+1 3x3 mat mul" << endl;
 
 #pragma omp parallel for num_threads(1)
 	for (unsigned int i = 0; i < pts_size; i++) 
@@ -251,7 +251,7 @@ double TriangulatePoints(const vector<KeyPoint>& pt_set1,
 	cout << "Kinv cols: " << Kinv.cols << endl;
 	cout << "KP1 rows: " << KP1.rows << endl;
 	cout << "KP1 cols: " << KP1.cols << endl;*/
-	cout << "+" << 3*pts_size << " 3x3 mat mul" << endl;
+	//cout << "+" << 3*pts_size << " 3x3 mat mul" << endl;
 	
 	Scalar mse = mean(reproj_error);
 	t = ((double)getTickCount() - t)/getTickFrequency();

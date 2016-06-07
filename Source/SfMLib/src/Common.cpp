@@ -175,7 +175,7 @@ void imshow_250x250(const string& name_, const Mat& patch)
 {
 	Mat bigpatch;
 	cv::resize(patch, bigpatch, Size(250, 250));
-	cout << "+1 image matrix creation" << endl;
+	//cout << "+1 image matrix creation" << endl;
 	imshow(name_, bigpatch);
 }
 
@@ -276,6 +276,6 @@ void open_imgs_dir(const char* dir_name, vector<cv::Mat>& images,
 		images_names.push_back(files_[i]);
 		images.push_back(m_);
 	}
-	cout << "+" << files_.size() << " image matrices created" << endl;
+	//cout << "+" << files_.size() << " image matrices created" << endl;
 
 }
